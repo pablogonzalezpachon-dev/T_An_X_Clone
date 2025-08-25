@@ -1,0 +1,40 @@
+import { createRoot } from "react-dom/client";
+import { BrowserRouter, Route, Routes } from "react-router";
+import "/src/Lib/Styles/App.css";
+
+import Showcase from "./Views/Showcase.tsx";
+import MainLayout from "./Views/MainLayout.tsx";
+import HomePage from "./Views/Home/HomePage.tsx";
+import ExplorePage from "./Views/Explore/ExplorePage.tsx";
+import MessagesPage from "./Views/Messages/MessagesPage.tsx";
+import NexusPage from "./Views/Nexus/NexusPage.tsx";
+import ProfilePage from "./Views/Profile/ProfilePage.tsx";
+import SettingsPage from "./Views/Settings/SettingsPage.tsx";
+import axios from "axios";
+import AuthProvider from "./Lib/Contexts/AuthContext.tsx";
+import LoginPage from "./Views/Auth/LoginPage.tsx";
+import SignUpPage from "./Views/Auth/SignUpPage.tsx";
+
+axios.defaults.withCredentials = true;
+
+createRoot(document.getElementById("root")!).render(
+  <AuthProvider>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Showcase />} />
+
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignUpPage />} />
+
+        <Route element={<MainLayout />}>
+          <Route path="/home" element={<HomePage />} />
+          <Route path="/explore" element={<ExplorePage />} />
+          <Route path="/messages" element={<MessagesPage />} />
+          <Route path="/nexus" element={<NexusPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
+  </AuthProvider>
+);
