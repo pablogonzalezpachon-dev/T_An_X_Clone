@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router";
+import SignUpFlow from "./Auth/SignUpFlow";
 
 type Props = {};
 
@@ -25,15 +26,7 @@ function Showcase({}: Props) {
         <h2 className="font-extrabold text-3xl tracking-widest mb-4">
           Join now
         </h2>
-        <button
-          onClick={() => {
-            navigate("/signup");
-          }}
-          className="bg-black rounded-3xl text-lg w-80 text-white font-bold h-10 mb-10"
-        >
-          Create an account
-        </button>
-
+        <SignUpFlow />
         <div className="flex flex-col gap-y-3">
           <p className="text-lg font-semibold">Already have an account?</p>
           <button

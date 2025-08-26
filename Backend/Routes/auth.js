@@ -1,7 +1,7 @@
 import express from "express";
 import jwt from "jsonwebtoken";
-
 import { createClient } from "@supabase/supabase-js";
+import sql from "../Lib/Utils/db.js";
 
 const authRouter = express.Router();
 
@@ -87,6 +87,18 @@ authRouter.post("/logout", async (req, res) => {
   } catch (error) {
     console.error("Logout error:", error);
     return res.status(403).json({ message: `Error logging out: ${error}` });
+  }
+});
+
+authRouter.post("/email", async (req, res) => {
+  const email = req.body.email;
+  try {
+    const response =
+      await sql`select email from auth.users where email = ${email};`;
+    res.send(response);
+  } catch (e) {
+    res.status(500).json({ message: "Error retrieving email" });
+    console.error("Error retrieving email:", e);
   }
 });
 
