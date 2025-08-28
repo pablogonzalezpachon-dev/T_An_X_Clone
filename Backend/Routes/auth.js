@@ -2,6 +2,7 @@ import express from "express";
 import jwt from "jsonwebtoken";
 import { createClient } from "@supabase/supabase-js";
 import sql from "../Lib/Utils/db.js";
+import { createHandle } from "../Lib/Utils/functions.js";
 
 const authRouter = express.Router();
 
@@ -11,20 +12,38 @@ const supabase = createClient(
 );
 
 authRouter.post("/signup", async (req, res) => {
+  const name = req.body.name;
   const email = req.body.email;
+  const monthOfBirth = req.body.monthOfBirth;
+  const dayOfBirth = req.body.dayOfBirth;
+  const yearOfBirth = req.body.yearOfBirth;
   const password = req.body.password;
+
   try {
     const { data, error } = await supabase.auth.admin.createUser({
       email: email,
       password: password,
       email_confirm: true,
     });
+    console.log(data);
     if (error) {
       throw error;
     }
-    console.log(data);
+    if (data) {
+      const profileUser = await sql`
+        INSERT INTO profiles 
+          (id, email, name, month_birth, day_birth, year_birth, t_identifier)
+        VALUES 
+          (${data.user.id}, ${
+        data.user.email
+      }, ${name}, ${monthOfBirth}, ${dayOfBirth}, ${yearOfBirth}, ${createHandle(
+        name
+      )});
+      `;
+    }
     res.json({ message: `${data.user} succesfully signed up` });
   } catch (e) {
+    console.log(e);
     res.status(403).json({ message: `${e}` });
   }
 });
@@ -53,6 +72,7 @@ authRouter.post("/login", async (req, res) => {
 
     res.json({ message: `${data.user.email} succesfully logged in!` });
   } else {
+    console.log(error);
     res.status(403).json({ message: "Not authenticated" });
   }
 });

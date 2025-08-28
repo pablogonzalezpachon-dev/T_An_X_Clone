@@ -7,7 +7,15 @@ import {
 } from "@headlessui/react";
 import axios from "axios";
 import debounce from "debounce";
-import AvatarUploader from "./AvatarUploader";
+import { IoMdClose } from "react-icons/io";
+import { IoIosArrowRoundBack } from "react-icons/io";
+import { useForm, type SubmitHandler } from "react-hook-form";
+import {
+  isValidDate,
+  validateEmail,
+  validatePassword,
+} from "../../Lib/functions";
+import { useNavigate } from "react-router";
 
 const months = [
   "January",
@@ -23,77 +31,26 @@ const months = [
   "November",
   "December",
 ];
-const COMMON_PASSWORDS = new Set([
-  "123456",
-  "123456789",
-  "qwerty",
-  "password",
-  "111111",
-  "12345678",
-  "abc123",
-  "1234567",
-  "password1",
-  "123123",
-  "000000",
-]);
 
-type PasswordCheck = {
-  valid: boolean;
-  errors: string[];
+type Inputs = {
+  name: string;
+  email: string;
+  monthOfBirth: number;
+  dayOfBirth: number;
+  yearOfBirth: number;
+  password: string;
 };
 
-export function validatePassword(pwd: string): PasswordCheck {
-  const errors: string[] = [];
-  const hasMinLength = pwd.length >= 8; // minimum length
-  const hasLower = /[a-z]/.test(pwd); // a–z
-  const hasUpper = /[A-Z]/.test(pwd); // A–Z
-  const hasNumber = /\d/.test(pwd); // 0–9
-  const hasSpecial = /[^A-Za-z0-9]/.test(pwd); // symbols
-  const hasNoSpaces = !/\s/.test(pwd);
-  const notCommon = !COMMON_PASSWORDS.has(pwd.toLowerCase());
-
-  // Collect messages for failed requirements
-  if (!hasMinLength) errors.push("At least 8 characters.");
-  if (!hasLower) errors.push("Include a lowercase letter.");
-  if (!hasUpper) errors.push("Include an uppercase letter.");
-  if (!hasNumber) errors.push("Include a number.");
-  if (!hasSpecial) errors.push("Include a special character (e.g. !@#$%).");
-  if (!hasNoSpaces) errors.push("No spaces.");
-  if (!notCommon) errors.push("Avoid common/guessable passwords.");
-
-  // "Relatively strong": length OK + at least 4 of the 5 character classes
-  const classesPassed = [hasLower, hasUpper, hasNumber, hasSpecial].filter(
-    Boolean
-  ).length;
-  const valid =
-    hasMinLength &&
-    hasNoSpaces &&
-    notCommon &&
-    classesPassed >= 3; /* relax or 4 for stricter */
-
-  return { valid, errors };
-}
-
-function validateEmail(email: string) {
-  const re =
-    /^(?!\.)(?!.*\.\.)([a-z0-9_'+\-\.]*)[a-z0-9_+-]@([a-z0-9][a-z0-9\-]*\.)+[a-z]{2,}$/i;
-  return re.test(email);
-}
-
-function isValidDate(year: number, month: number, day: number): boolean {
-  const today = new Date();
-  let age = today.getFullYear() - year;
-  if (
-    today.getMonth() + 1 < month ||
-    (today.getMonth() + 1 === month && today.getDate() < day)
-  ) {
-    age--;
-  }
-
-  return age >= 15;
-}
-
 export default function SignUpFlow() {
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<Inputs>();
+
+  const navigate = useNavigate();
+
   const [open, setOpen] = useState(false);
   const [nameState, setNameState] = useState(false);
   const [nameError, setNameError] = useState<undefined | string>();
@@ -117,8 +74,24 @@ export default function SignUpFlow() {
     async (e: React.ChangeEvent<HTMLInputElement>) => {
       if (e.target.value.trim()) {
         if (validateEmail(e.target.value.trim())) {
-          setEmailError(undefined);
-          setEmailState(true);
+          try {
+            const { data } = await axios.post(
+              "http://localhost:3000/auth/email",
+              {
+                email: e.target.value.trim(),
+              }
+            );
+            if (data.length) {
+              setEmailError("Email is already in use");
+              setEmailState(false);
+            } else {
+              setEmailError(undefined);
+              setEmailState(true);
+            }
+          } catch (e) {
+            setEmailError("Error checking email");
+            setEmailState(false);
+          }
         } else {
           setEmailError("Email is invalid");
           setEmailState(false);
@@ -127,21 +100,45 @@ export default function SignUpFlow() {
         setEmailState(false);
         setEmailError("Email is required");
       }
-      try {
-        const { data } = await axios.post("http://localhost:3000/auth/email", {
-          email: e.target.value.trim(),
-        });
-        if (data.length) {
-          setEmailError("Email is already in use");
-          setEmailState(false);
-        }
-      } catch (e) {
-        setEmailError("Error checking email");
-        setEmailState(false);
-      }
     },
     1000
   );
+
+  function clear() {
+    setNameState(false);
+    setNameError(undefined);
+    setEmailState(false);
+    setEmailError(undefined);
+    setMonth(undefined);
+    setDateError(undefined);
+    setDay(undefined);
+    setYear(undefined);
+    setPasswordState(false);
+    setPasswordError(undefined);
+    setFile(null);
+  }
+
+  const onSubmit: SubmitHandler<Inputs> = async (data) => {
+    console.log(data);
+
+    try {
+      const signUpResponse = await axios.post(
+        "http://localhost:3000/auth/signup",
+        data
+      );
+      console.log(signUpResponse);
+
+      const loginResponse = await axios.post(
+        "http://localhost:3000/auth/login",
+        { email: data.email, password: data.password }
+      );
+
+      console.log("loginRespose:", loginResponse);
+      navigate("/home");
+    } catch (e) {
+      console.log(e);
+    }
+  };
 
   return (
     <div>
@@ -149,20 +146,14 @@ export default function SignUpFlow() {
         onClick={() => {
           setOpen(true);
           setPage(1);
-          setNameState(false);
-          setNameError(undefined);
-          setEmailState(false);
-          setEmailError(undefined);
-          setMonth(undefined);
-          setDateError(undefined);
-          setDay(undefined);
-          setYear(undefined);
+          clear();
+          reset();
         }}
         className="bg-black rounded-3xl text-lg w-80 text-white font-bold h-10 mb-10"
       >
         Create an account
       </button>
-      <Dialog open={open} onClose={setOpen} className="relative z-10">
+      <Dialog open={open} onClose={() => {}} className="relative z-10">
         <DialogBackdrop
           transition
           className="fixed inset-0 bg-gray-500/75 transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"
@@ -174,6 +165,28 @@ export default function SignUpFlow() {
               transition
               className="relative transform overflow-hidden rounded-lg  bg-white text-left shadow-xl transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in sm:my-8 w-150 data-closed:sm:translate-y-0 data-closed:sm:scale-95"
             >
+              <IoMdClose
+                size={23}
+                className={`absolute top-3 left-3 ${
+                  page !== 1 ? "hidden" : ""
+                }`}
+                onClick={() => {
+                  setOpen(false);
+                  clear();
+                }}
+              />
+
+              <IoIosArrowRoundBack
+                size={33}
+                className={`absolute top-3 left-3 ${
+                  page === 1 ? "hidden" : ""
+                }`}
+                onClick={() => {
+                  setDateError(undefined);
+                  setPage((page) => page - 1);
+                }}
+              />
+
               <div className="bg-white px-15 pt-2">
                 <div className=" text-center sm:mt-0 sm:ml-4 sm:text-left">
                   <svg
@@ -196,13 +209,14 @@ export default function SignUpFlow() {
                     {page === 2 ? "You will need a password" : ""}
                     {page === 3 ? "Choose a profile image" : ""}
                   </DialogTitle>
-                  <form>
+                  <form onSubmit={handleSubmit(onSubmit)}>
                     <div
                       className={`mt-10 flex flex-col gap-y-8 ${
                         page !== 1 ? "hidden" : ""
                       }`}
                     >
                       <input
+                        {...register("name")}
                         className={`border w-full border-gray-300 h-15 text-lg pl-2 rounded-lg focus:border-red-500
                       `}
                         placeholder="Name"
@@ -220,6 +234,7 @@ export default function SignUpFlow() {
                         {nameError}
                       </span>
                       <input
+                        {...register("email")}
                         className="border w-full border-gray-300 h-15 text-lg pl-2 rounded-lg"
                         placeholder="Email"
                         onChange={(e) => checkEmail(e)}
@@ -236,6 +251,7 @@ export default function SignUpFlow() {
                       </p>
                       <div className="flex gap-x-3">
                         <select
+                          {...register("monthOfBirth")}
                           className="border border-gray-300 w-[45%] h-15 text-lg pl-2 rounded-lg text-gray-500"
                           onChange={(e) => {
                             setMonth(parseInt(e.target.value));
@@ -251,6 +267,7 @@ export default function SignUpFlow() {
                           ))}
                         </select>
                         <select
+                          {...register("dayOfBirth")}
                           className="border border-gray-300 w-[20%] h-15 text-lg pl-2 rounded-lg text-gray-500"
                           onChange={(e) => {
                             setDay(parseInt(e.target.value));
@@ -266,6 +283,7 @@ export default function SignUpFlow() {
                           ))}
                         </select>
                         <select
+                          {...register("yearOfBirth")}
                           className="border border-gray-300 w-[35%] h-15 text-lg pl-2 rounded-lg text-gray-500"
                           onChange={(e) => {
                             setYear(parseInt(e.target.value));
@@ -322,8 +340,10 @@ export default function SignUpFlow() {
                       </p>
 
                       <input
+                        {...register("password")}
                         className={`border w-full border-gray-300 h-15 text-lg pl-2 rounded-lg focus:border-red-500
                       `}
+                        autoComplete="new-password"
                         type="password"
                         placeholder="Password"
                         onChange={debounce((e) => {
@@ -345,17 +365,14 @@ export default function SignUpFlow() {
 
                       <button
                         disabled={!passwordState}
-                        type="button"
-                        onClick={() => {
-                          setPage(3);
-                        }}
+                        type="submit"
                         className="disabled:opacity-50 mt-80 mb-5 h-13 w-full justify-center rounded-3xl bg-black px-3 py-2 text-lg font-bold text-white"
                       >
-                        Continue
+                        Create account
                       </button>
                     </div>
 
-                    <div
+                    {/* <div
                       className={`mt-10 flex flex-col gap-y-8 ${
                         page !== 3 ? "hidden" : ""
                       }`}
@@ -375,7 +392,7 @@ export default function SignUpFlow() {
                       >
                         Continue
                       </button>
-                    </div>
+                    </div> */}
                   </form>
                 </div>
               </div>
