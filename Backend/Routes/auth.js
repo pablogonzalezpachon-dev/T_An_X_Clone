@@ -1,15 +1,10 @@
 import express from "express";
 import jwt from "jsonwebtoken";
-import { createClient } from "@supabase/supabase-js";
 import sql from "../Lib/Utils/db.js";
 import { createHandle } from "../Lib/Utils/functions.js";
+import { supabase } from "../Lib/Utils/supabaseClients.js";
 
 const authRouter = express.Router();
-
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
 
 authRouter.post("/signup", async (req, res) => {
   const name = req.body.name;
@@ -77,22 +72,6 @@ authRouter.post("/login", async (req, res) => {
   }
 });
 
-authRouter.get("/session", async (req, res) => {
-  try {
-    const {
-      data: { session },
-      error,
-    } = await supabase.auth.getSession();
-
-    if (error) throw error;
-    res.json({ session: session });
-    return session;
-  } catch (error) {
-    console.error("Session retrieval error:", error);
-    return null;
-  }
-});
-
 authRouter.post("/logout", async (req, res) => {
   try {
     const { error } = await supabase.auth.signOut();
@@ -119,6 +98,22 @@ authRouter.post("/email", async (req, res) => {
   } catch (e) {
     res.status(500).json({ message: "Error retrieving email" });
     console.error("Error retrieving email:", e);
+  }
+});
+
+authRouter.get("/session", async (req, res) => {
+  try {
+    const {
+      data: { session },
+      error,
+    } = await supabase.auth.getSession();
+
+    if (error) throw error;
+    res.json({ session: session });
+    return session;
+  } catch (error) {
+    console.error("Session retrieval error:", error);
+    return null;
   }
 });
 

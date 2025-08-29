@@ -5,12 +5,7 @@ import session from "express-session";
 import dotenv from "dotenv";
 import sql from "./Lib/Utils/db.js";
 import authRouter from "./Routes/auth.js";
-import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+import userRouter from "./Routes/user.js";
 
 dotenv.config();
 
@@ -30,8 +25,9 @@ app.use(
 app.use(express.json());
 app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 app.use("/auth", authRouter);
+app.use("/user", requireAuth, userRouter);
 
-app.use("/user", (req, res, next) => {
+function requireAuth(req, res, next) {
   if (req.session.authorization) {
     let token = req.session.authorization["accessToken"];
 
@@ -44,7 +40,7 @@ app.use("/user", (req, res, next) => {
   } else {
     return res.status(403).json({ message: "User not authenticated" });
   }
-});
+}
 
 app.get("/session", (req, res) => {
   if (req.session.authorization) {
@@ -59,16 +55,6 @@ app.get("/session", (req, res) => {
     });
   } else {
     return res.status(403).json({ message: "User not authenticated" });
-  }
-});
-
-app.get("/get", async (req, res) => {
-  try {
-    const r = await sql`select * from users;`;
-    res.send(r);
-  } catch (e) {
-    console.log(e);
-    res.send("No");
   }
 });
 

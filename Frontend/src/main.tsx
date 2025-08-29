@@ -13,7 +13,8 @@ import SettingsPage from "./Views/Settings/SettingsPage.tsx";
 import axios from "axios";
 import AuthProvider from "./Lib/Contexts/AuthContext.tsx";
 import LoginPage from "./Views/Auth/LoginPage.tsx";
-import SignUpPage from "./Views/Auth/SignUpPage.tsx";
+import RepliesPage from "./Views/Profile/RepliesPage.tsx";
+import LikesPage from "./Views/Profile/LikesPage.tsx";
 
 axios.defaults.withCredentials = true;
 
@@ -24,14 +25,18 @@ createRoot(document.getElementById("root")!).render(
         <Route path="/" element={<Showcase />} />
 
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup" element={<SignUpPage />} />
 
         <Route element={<MainLayout />}>
           <Route path="/home" element={<HomePage />} />
           <Route path="/explore" element={<ExplorePage />} />
           <Route path="/messages" element={<MessagesPage />} />
           <Route path="/nexus" element={<NexusPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
+
+          <Route path="profile" element={<ProfilePage />}>
+            <Route path="replies" element={<RepliesPage />} />
+            <Route path="likes" element={<LikesPage />} />
+          </Route>
+
           <Route path="/settings" element={<SettingsPage />} />
         </Route>
       </Routes>

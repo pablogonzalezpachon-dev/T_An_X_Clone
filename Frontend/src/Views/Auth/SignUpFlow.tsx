@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogBackdrop,
@@ -70,6 +70,8 @@ export default function SignUpFlow() {
 
   const [file, setFile] = useState<File | null>(null);
 
+  const [formError, setFormError] = useState<undefined | string>();
+
   const checkEmail = debounce(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
       if (e.target.value.trim()) {
@@ -136,6 +138,7 @@ export default function SignUpFlow() {
       console.log("loginRespose:", loginResponse);
       navigate("/home");
     } catch (e) {
+      setFormError("Error signing up, please try again");
       console.log(e);
     }
   };
@@ -370,6 +373,9 @@ export default function SignUpFlow() {
                       >
                         Create account
                       </button>
+                      <span className="text-red-500 text-sm mt-[-20px] ml-2 ">
+                        {formError}
+                      </span>
                     </div>
 
                     {/* <div
