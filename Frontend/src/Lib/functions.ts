@@ -67,3 +67,22 @@ export function validateEmail(email: string) {
     /^(?!\.)(?!.*\.\.)([a-z0-9_'+\-\.]*)[a-z0-9_+-]@([a-z0-9][a-z0-9\-]*\.)+[a-z]{2,}$/i;
   return re.test(email);
 }
+
+export function formatJoinedMonthYear(
+  date: string,
+  opts?: {
+    locale?: string; // e.g. 'en-US', 'es-ES'
+    timeZone?: string; // e.g. 'America/Guayaquil', 'UTC'
+  }
+): string {
+  const { locale = "en-US", timeZone = "America/Guayaquil" } = opts ?? {};
+  const d = new Date(date);
+
+  const formatted = new Intl.DateTimeFormat(locale, {
+    month: "long",
+    year: "numeric",
+    timeZone,
+  }).format(d);
+
+  return `${formatted}`;
+}

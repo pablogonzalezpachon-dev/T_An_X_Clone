@@ -12,7 +12,6 @@ import ProfilePage from "./Views/Profile/ProfilePage.tsx";
 import SettingsPage from "./Views/Settings/SettingsPage.tsx";
 import axios from "axios";
 import AuthProvider from "./Lib/Contexts/AuthContext.tsx";
-import LoginPage from "./Views/Auth/LoginPage.tsx";
 import RepliesPage from "./Views/Profile/RepliesPage.tsx";
 import LikesPage from "./Views/Profile/LikesPage.tsx";
 
@@ -23,8 +22,6 @@ createRoot(document.getElementById("root")!).render(
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Showcase />} />
-
-        <Route path="/login" element={<LoginPage />} />
 
         <Route element={<MainLayout />}>
           <Route path="/home" element={<HomePage />} />

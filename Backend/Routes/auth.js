@@ -27,13 +27,13 @@ authRouter.post("/signup", async (req, res) => {
     if (data) {
       const profileUser = await sql`
         INSERT INTO profiles 
-          (id, email, name, month_birth, day_birth, year_birth, t_identifier)
+          (id, email, name, month_birth, day_birth, year_birth, t_identifier, created_at)
         VALUES 
           (${data.user.id}, ${
         data.user.email
       }, ${name}, ${monthOfBirth}, ${dayOfBirth}, ${yearOfBirth}, ${createHandle(
         name
-      )});
+      )}, ${data.user.created_at});
       `;
     }
     res.json({ message: `${data.user} succesfully signed up` });
@@ -68,7 +68,7 @@ authRouter.post("/login", async (req, res) => {
     res.json({ message: `${data.user.email} succesfully logged in!` });
   } else {
     console.log(error);
-    res.status(403).json({ message: "Not authenticated" });
+    res.status(403).json({ message: "Invalid credentials" });
   }
 });
 

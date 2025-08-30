@@ -3,17 +3,66 @@ import { use, useContext, useEffect, useMemo, useState } from "react";
 import { IoSearchOutline } from "react-icons/io5";
 import { AuthContext } from "../../Lib/Contexts/AuthContext";
 import { Navigate, useNavigate } from "react-router";
-import type { sessionResponse } from "../../Lib/types";
+import type { Post, sessionResponse } from "../../Lib/types";
+
+import { useForm, type SubmitHandler } from "react-hook-form";
+import type { Session } from "@supabase/supabase-js";
+import PostCard from "../../Lib/Assets/PostCard";
+
+type Inputs = {
+  content: string;
+};
 
 type Props = {};
 
 function HomePage({}: Props) {
+  const [posts, setPosts] = useState<Post[]>([]);
   const navigate = useNavigate();
+  const [contentState, setContentState] = useState(false);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<Inputs>({});
+
+  const onSubmit: SubmitHandler<Inputs> = async (data) => {
+    console.log(data);
+
+    try {
+      const { data: axiosData } = await axios.get<{ session: Session }>(
+        "http://localhost:3000/user/session"
+      );
+      const userId = axiosData.session.user.id;
+
+      const response = await axios.post("http://localhost:3000/user/post", {
+        ...data,
+        userId,
+      });
+      console.log(response);
+    } catch (e) {
+      console.error("Error creating post:", e);
+    }
+  };
 
   const autoGrow = (el: HTMLTextAreaElement) => {
     el.style.height = "0px"; // reset
     el.style.height = el.scrollHeight + "px"; // fit content
   };
+
+  useEffect(() => {
+    async function fetchPosts() {
+      try {
+        const { data: posts } = await axios.get<Post[]>(
+          "http://localhost:3000/user/posts"
+        );
+        console.log(posts);
+        setPosts(posts);
+      } catch (error) {
+        console.error("Error fetching posts:", error);
+      }
+    }
+    fetchPosts();
+  }, []);
 
   return (
     <div className="grid grid-cols-[1fr_clamp(0px,35vw,900px)] max-[1000px]:grid-cols-[1fr]">
@@ -22,23 +71,48 @@ function HomePage({}: Props) {
           <p className="text-gray-600 font-semibold">For you</p>
           <p className="text-gray-600 font-semibold">Following</p>
         </div>
-        <div className="w-full border-b border-gray-200 p-4">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="w-full border-b border-gray-200 p-4"
+        >
           <div className="flex gap-x-2 ">
             <div className="w-12 h-11 rounded-4xl  border "></div>
             <textarea
+              {...register("content")}
               rows={1}
-              onChange={(e) => autoGrow(e.currentTarget)}
-              className=" focus:outline-none overflow-visible resize-none w-full text-xl mt-1 ml-1"
+              onChange={(e) => {
+                autoGrow(e.currentTarget);
+
+                if (e.target.value.trim()) {
+                  setContentState(true);
+                } else {
+                  setContentState(false);
+                }
+              }}
+              className="focus:outline-none overflow-visible resize-none w-full text-xl mt-1 ml-1"
               placeholder="What's happening?"
             ></textarea>
           </div>
           <hr className="border-t border-gray-200 mt-5 ml-10 mr-2" />
           <div className="flex place-content-end">
-            <button className="bg-black rounded-3xl text-md w-18 text-white font-bold h-10 mt-3  ">
+            <button
+              type="submit"
+              disabled={!contentState}
+              className="disabled:opacity-50 bg-black rounded-3xl text-md w-18 text-white font-bold h-10 mt-3  "
+            >
               Post
             </button>
           </div>
-        </div>
+        </form>
+        {posts.map((post) => (
+          <PostCard
+            key={post.id}
+            content={post.content}
+            date_of_creation={post.date_of_creation}
+            name={post.name}
+            t_identifier={post.t_identifier}
+          />
+        ))}
       </div>
       <div className="h-screen px-10">
         <form>

@@ -22,4 +22,13 @@ export type UserProfile = {
   name: string;
   t_identifier: string;
   year_birth: string;
+  created_at: string;
+};
+
+export type Post = {
+  id: number;
+  content: string;
+  date_of_creation: string;
+  name: string;
+  t_identifier: string;
 };

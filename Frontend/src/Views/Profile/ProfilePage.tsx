@@ -6,12 +6,16 @@ import { Link, Outlet } from "react-router";
 import axios from "axios";
 import type { Session } from "@supabase/supabase-js";
 import type { UserProfile } from "../../Lib/types";
+import { formatJoinedMonthYear } from "../../Lib/functions";
+import LoadingSpinner from "../../Lib/Assets/LoadingSpinner";
 
 type Props = {};
 
 function ProfilePage({}: Props) {
+  const [loading, setLoading] = useState(false);
   const [profileData, setProfileData] = useState<UserProfile | null>(null);
   useEffect(() => {
+    setLoading(true);
     async function fetchData() {
       try {
         const { data } = await axios.get<{ session: Session }>(
@@ -27,9 +31,11 @@ function ProfilePage({}: Props) {
           );
           console.log(data);
           setProfileData(data[0]);
+          setLoading(false);
         }
       } catch (e) {
         console.log(e);
+        setLoading(false);
       }
     }
     fetchData();
@@ -59,7 +65,10 @@ function ProfilePage({}: Props) {
             <div className="flex gap-x-1 mt-2">
               <FaRegCalendarAlt className="my-auto text-gray-500" />
               <p className="text-gray-600">
-                Joined {profileData?.month_birth} {profileData?.year_birth}
+                Joined{" "}
+                {profileData
+                  ? formatJoinedMonthYear(profileData?.created_at)
+                  : ""}
               </p>
             </div>
             <div className="flex gap-x-4 mt-2">
@@ -82,6 +91,13 @@ function ProfilePage({}: Props) {
               </Link>
             </div>
           </div>
+          {loading && (
+            <LoadingSpinner
+              style={
+                "w-7 h-7 text-gray-200 animate-spin fill-blue-400 mx-auto mt-[-130px] mb-40"
+              }
+            />
+          )}
         </div>
         <Outlet />
       </div>

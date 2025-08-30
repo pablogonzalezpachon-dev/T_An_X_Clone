@@ -16,6 +16,7 @@ import {
   validatePassword,
 } from "../../Lib/functions";
 import { useNavigate } from "react-router";
+import LoadingSpinner from "../../Lib/Assets/LoadingSpinner";
 
 const months = [
   "January",
@@ -70,6 +71,7 @@ export default function SignUpFlow() {
 
   const [file, setFile] = useState<File | null>(null);
 
+  const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState<undefined | string>();
 
   const checkEmail = debounce(
@@ -121,6 +123,8 @@ export default function SignUpFlow() {
   }
 
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
+    setFormError(undefined);
+    setLoading(true);
     console.log(data);
 
     try {
@@ -137,7 +141,9 @@ export default function SignUpFlow() {
 
       console.log("loginRespose:", loginResponse);
       navigate("/home");
+      setLoading(false);
     } catch (e) {
+      setLoading(false);
       setFormError("Error signing up, please try again");
       console.log(e);
     }
@@ -366,6 +372,17 @@ export default function SignUpFlow() {
                         {passwordError}
                       </span>
 
+                      {loading && (
+                        <LoadingSpinner
+                          style={
+                            "w-10 h-10 text-gray-200 animate-spin fill-blue-400 mx-auto mt-10 mb-[-350px]"
+                          }
+                        />
+                      )}
+                      <span className="text-red-500 text-md mt-[-20px] text-center font-semibold">
+                        {formError}
+                      </span>
+
                       <button
                         disabled={!passwordState}
                         type="submit"
@@ -373,9 +390,6 @@ export default function SignUpFlow() {
                       >
                         Create account
                       </button>
-                      <span className="text-red-500 text-sm mt-[-20px] ml-2 ">
-                        {formError}
-                      </span>
                     </div>
 
                     {/* <div

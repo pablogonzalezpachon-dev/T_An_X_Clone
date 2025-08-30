@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router";
 import SignUpFlow from "./Auth/SignUpFlow";
+import LoginFlow from "./Auth/LoginFlow";
 
 type Props = {};
 
@@ -29,14 +30,7 @@ function Showcase({}: Props) {
         <SignUpFlow />
         <div className="flex flex-col gap-y-3">
           <p className="text-lg font-semibold">Already have an account?</p>
-          <button
-            onClick={() => {
-              navigate("/login");
-            }}
-            className="border-1 border-gray-500 rounded-3xl text-lg w-80 font-bold h-10"
-          >
-            Log in
-          </button>
+          <LoginFlow />
         </div>
       </div>
     </div>
