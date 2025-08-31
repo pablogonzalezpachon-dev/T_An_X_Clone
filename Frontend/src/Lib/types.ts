@@ -6,10 +6,6 @@ export type Auth = {
   weakPassword?: WeakPassword;
 };
 
-export type sessionResponse = {
-  user: { data: Auth; exp: number; iat: number };
-};
-
 export type UserProfile = {
   avatar: string;
   bio: string;
@@ -31,4 +27,5 @@ export type Post = {
   date_of_creation: string;
   name: string;
   t_identifier: string;
+  likes: string;
 };

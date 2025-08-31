@@ -1,22 +1,59 @@
-import React from "react";
 import { SlUserFollow } from "react-icons/sl";
+import { timeAgo } from "../functions";
+import { FiMessageSquare } from "react-icons/fi";
+import { BiRepost } from "react-icons/bi";
+import { FaRegHeart } from "react-icons/fa";
+import { FaEye } from "react-icons/fa";
+import { FaRegBookmark } from "react-icons/fa";
+import axios from "axios";
 
 type Props = {
+  id: number;
   content: string;
   date_of_creation: string;
   name: string;
   t_identifier: string;
+  userId: string | undefined;
+  likes: string;
 };
 
-function PostCard({ content, date_of_creation, name, t_identifier }: Props) {
+function PostCard({
+  id,
+  content,
+  date_of_creation,
+  name,
+  t_identifier,
+  userId,
+  likes,
+}: Props) {
+  console.log(userId);
+  async function handleLike() {
+    try {
+      const response = await axios.post(
+        "http://localhost:3000/user/post/like",
+        {
+          postId: id,
+          userId: userId,
+        }
+      );
+      console.log(response);
+    } catch (error) {
+      console.error("Error liking post:", error);
+    }
+  }
+
   return (
     <div className="w-full border-b border-gray-200 p-4">
-      <div className=" flex h-15 w-full justify-between">
+      <div className="w-full flex h-15 justify-between">
         <div className="flex gap-x-2">
           <div className="w-11 h-11 rounded-full bg-black"></div>
-          <p className="font-semibold">{name}</p>
+          <p className="font-semibold truncate ">{name}</p>
           <p className="text-gray-500">
-            {t_identifier} · {date_of_creation}
+            {t_identifier} ·{" "}
+            {timeAgo(date_of_creation, {
+              locale: "en-US",
+              timeZone: "America/Guayaquil",
+            })}
           </p>
         </div>
         <div>
@@ -24,7 +61,39 @@ function PostCard({ content, date_of_creation, name, t_identifier }: Props) {
         </div>
       </div>
       <div className="px-13 mt-[-30px]">
-        <p>{content}</p>
+        <p className="whitespace-pre-wrap break-all">{content}</p>
+      </div>
+      <div className="h-5 w-full mt-5 flex justify-evenly">
+        <div className="flex items-center gap-x-1 ">
+          <FiMessageSquare color="gray" size={20} className="" />
+          <p className="text-gray-500">0</p>
+        </div>
+
+        <div className="flex items-center gap-x-1 ">
+          <BiRepost color="gray" size={25} className="" />
+          <p className="text-gray-500">0</p>
+        </div>
+
+        <div className="flex items-center gap-x-1 ">
+          <FaRegHeart
+            onClick={() => {
+              handleLike();
+            }}
+            color="gray"
+            size={18}
+            className=""
+          />
+          <p className="text-gray-500">{likes}</p>
+        </div>
+
+        <div className="flex items-center gap-x-1 ">
+          <FaEye color="gray" size={20} className="" />
+          <p className="text-gray-500">0</p>
+        </div>
+
+        <div className="flex items-center gap-x-1 ">
+          <FaRegBookmark color="gray" size={20} className="" />
+        </div>
       </div>
     </div>
   );

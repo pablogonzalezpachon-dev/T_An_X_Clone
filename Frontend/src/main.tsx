@@ -29,7 +29,7 @@ createRoot(document.getElementById("root")!).render(
           <Route path="/messages" element={<MessagesPage />} />
           <Route path="/nexus" element={<NexusPage />} />
 
-          <Route path="profile" element={<ProfilePage />}>
+          <Route path=":id" element={<ProfilePage />}>
             <Route path="replies" element={<RepliesPage />} />
             <Route path="likes" element={<LikesPage />} />
           </Route>

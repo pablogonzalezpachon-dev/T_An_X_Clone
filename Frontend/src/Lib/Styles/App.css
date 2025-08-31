@@ -1,4 +1,16 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 :root {
   font-family: "InterVariable" sans-serif;
+}
+
+@theme {
+  @keyframes grow {
+    from {
+      width: 0%;
+    }
+    to {
+      width: 100%;
+    }
+  }
 }

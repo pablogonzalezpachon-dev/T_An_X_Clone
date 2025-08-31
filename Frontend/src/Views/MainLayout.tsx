@@ -8,21 +8,22 @@ import { BsPerson } from "react-icons/bs";
 import { IoSettingsOutline } from "react-icons/io5";
 import { BiPencil } from "react-icons/bi";
 import axios from "axios";
-import { useEffect } from "react";
-import type { sessionResponse } from "../Lib/types";
+import { useEffect, useState } from "react";
+import type { Auth } from "../Lib/types";
 
 type Props = {};
 
 function MainLayout({}: Props) {
+  const [id, setId] = useState("");
   const navigate = useNavigate();
   useEffect(() => {
     const verifyAuth = async () => {
       try {
-        const { data: response } = await axios.get<sessionResponse>(
-          "http://localhost:3000/session"
-        );
-        console.log(response.user.data.user.email);
-        return response.user.data.user.email;
+        const { data: sessionResponse } = await axios.get<{
+          user: { data: Auth; exp: number; iat: number };
+        }>("http://localhost:3000/session");
+        const userId = sessionResponse.user.data.user.id;
+        setId(userId);
       } catch (e) {
         console.log(e);
         navigate("/");
@@ -85,7 +86,7 @@ function MainLayout({}: Props) {
               </p>
             </div>
           </NavLink>
-          <NavLink to="/profile">
+          <NavLink to={`/${id}`}>
             <div className="flex gap-x-5">
               <BsPerson size={35} className="my-auto max-[1300px]:mx-auto" />
               <p className="text-2xl font-semibold my-auto block max-[1300px]:hidden">

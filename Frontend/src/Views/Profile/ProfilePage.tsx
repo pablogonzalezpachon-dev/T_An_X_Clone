@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { IoSearchOutline } from "react-icons/io5";
 import { IoIosArrowRoundBack } from "react-icons/io";
 import { FaRegCalendarAlt } from "react-icons/fa";
@@ -8,31 +8,28 @@ import type { Session } from "@supabase/supabase-js";
 import type { UserProfile } from "../../Lib/types";
 import { formatJoinedMonthYear } from "../../Lib/functions";
 import LoadingSpinner from "../../Lib/Assets/LoadingSpinner";
+import { useParams } from "react-router";
 
 type Props = {};
 
 function ProfilePage({}: Props) {
+  let { id } = useParams();
   const [loading, setLoading] = useState(false);
   const [profileData, setProfileData] = useState<UserProfile | null>(null);
+
   useEffect(() => {
     setLoading(true);
     async function fetchData() {
       try {
-        const { data } = await axios.get<{ session: Session }>(
-          "http://localhost:3000/user/session"
+        const { data } = await axios.post<UserProfile[]>(
+          `http://localhost:3000/user/profile`,
+          {
+            id: id,
+          }
         );
-        const userId = data.session.user.id;
-        if (userId) {
-          const { data } = await axios.post<UserProfile[]>(
-            `http://localhost:3000/user/profile`,
-            {
-              id: userId,
-            }
-          );
-          console.log(data);
-          setProfileData(data[0]);
-          setLoading(false);
-        }
+        console.log(data);
+        setProfileData(data[0]);
+        setLoading(false);
       } catch (e) {
         console.log(e);
         setLoading(false);

@@ -79,10 +79,43 @@ export function formatJoinedMonthYear(
   const d = new Date(date);
 
   const formatted = new Intl.DateTimeFormat(locale, {
+    day: "numeric",
     month: "long",
     year: "numeric",
     timeZone,
   }).format(d);
 
   return `${formatted}`;
+}
+
+export function timeAgo(
+  date: string,
+  opts: {
+    locale?: string;
+    timeZone?: string;
+  }
+) {
+  const { locale, timeZone } = opts;
+  const d = new Date(date);
+  const now = new Date();
+
+  const secondsAgo = Math.floor((now.getTime() - d.getTime()) / 1000);
+  const minutesAgo = Math.floor(secondsAgo / 60);
+  const hoursAgo = Math.floor(minutesAgo / 60);
+
+  let timeString = "";
+  if (secondsAgo < 60) {
+    timeString = `${secondsAgo} s`;
+  } else if (minutesAgo < 60) {
+    timeString = `${minutesAgo} m`;
+  } else if (hoursAgo < 24) {
+    timeString = `${hoursAgo} h`;
+  } else {
+    timeString = new Intl.DateTimeFormat(locale, {
+      month: "short",
+      year: "2-digit",
+      timeZone,
+    }).format(d);
+  }
+  return timeString;
 }

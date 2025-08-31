@@ -49,11 +49,24 @@ userRouter.post("/post", async (req, res) => {
 userRouter.get("/posts", async (req, res) => {
   try {
     const posts =
-      await sql`select p.id, p.date_of_creation, p.content, u.name, u.t_identifier from posts p left join profiles u on p.created_by = u.id;`;
+      await sql`select p.id, p.date_of_creation, p.content, u.name, u.t_identifier, count(l.id) AS likes from posts p left join profiles u on p.created_by = u.id left join likes l on p.id = l.post_id group by p.id, p.date_of_creation, p.content, u.name, u.t_identifier order by p.date_of_creation desc;`;
     res.json(posts);
   } catch (error) {
     console.error("Error retrieving posts:", error);
     res.status(500).json({ message: "Error retrieving posts" });
+  }
+});
+
+userRouter.post("/post/like", async (req, res) => {
+  const postId = req.body.postId;
+  const userId = req.body.userId;
+  try {
+    const like =
+      await sql`INSERT INTO likes (post_id, who_liked) VALUES (${postId}, ${userId});`;
+    res.status(201).json({ message: "Post liked successfully" });
+  } catch (error) {
+    console.error("Error liking post:", error);
+    res.status(500).json({ message: "Error liking post" });
   }
 });
 

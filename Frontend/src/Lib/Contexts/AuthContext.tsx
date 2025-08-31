@@ -1,10 +1,8 @@
-import axios from "axios";
 import { createContext, useState, type ReactNode } from "react";
 
-axios.defaults.withCredentials = true;
-
 type Auth = {
-  authenticated: boolean;
+  tIdentifier: string;
+  setTIdentifier: (id: string) => void;
 };
 export const AuthContext = createContext({} as Auth);
 
@@ -13,10 +11,10 @@ type Props = {
 };
 
 export default function AuthProvider({ children }: Props) {
-  const [authenticated, setAuthenticated] = useState(false);
+  const [tIdentifier, setTIdentifier] = useState("");
 
   return (
-    <AuthContext.Provider value={{ authenticated }}>
+    <AuthContext.Provider value={{ tIdentifier, setTIdentifier }}>
       {children}
     </AuthContext.Provider>
   );

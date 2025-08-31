@@ -3,11 +3,14 @@ import { use, useContext, useEffect, useMemo, useState } from "react";
 import { IoSearchOutline } from "react-icons/io5";
 import { AuthContext } from "../../Lib/Contexts/AuthContext";
 import { Navigate, useNavigate } from "react-router";
-import type { Post, sessionResponse } from "../../Lib/types";
+import type { Post, UserProfile } from "../../Lib/types";
 
 import { useForm, type SubmitHandler } from "react-hook-form";
 import type { Session } from "@supabase/supabase-js";
 import PostCard from "../../Lib/Assets/PostCard";
+import LoadingSpinner from "../../Lib/Assets/LoadingSpinner";
+import { set } from "zod";
+import ProgressBar from "../../Lib/Assets/ProgressBar";
 
 type Inputs = {
   content: string;
@@ -17,15 +20,18 @@ type Props = {};
 
 function HomePage({}: Props) {
   const [posts, setPosts] = useState<Post[]>([]);
-  const navigate = useNavigate();
   const [contentState, setContentState] = useState(false);
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<Inputs>({});
+  const [postsLoading, setPostsLoading] = useState(false);
+  const [newPostLoading, setNewPostLoading] = useState(false);
+  const { register, handleSubmit, reset } = useForm<Inputs>({});
+  const [userId, setUserId] = useState<string | undefined>();
 
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
+    setContentState(false);
+    setNewPostLoading(true);
+    reset();
+    // optimistic UI
+
     console.log(data);
 
     try {
@@ -33,14 +39,36 @@ function HomePage({}: Props) {
         "http://localhost:3000/user/session"
       );
       const userId = axiosData.session.user.id;
+      setUserId(userId);
+      const { data: profileData } = await axios.post<UserProfile[]>(
+        `http://localhost:3000/user/profile`,
+        {
+          id: userId,
+        }
+      );
+
+      setPosts([
+        {
+          ...data,
+          id: Math.random(),
+          date_of_creation: new Date().toISOString(),
+          name: profileData[0].name,
+          t_identifier: profileData[0].t_identifier,
+          likes: "0",
+        },
+        ...posts,
+      ]);
 
       const response = await axios.post("http://localhost:3000/user/post", {
         ...data,
         userId,
       });
       console.log(response);
+      setNewPostLoading(false);
     } catch (e) {
+      setPosts(posts.slice(1));
       console.error("Error creating post:", e);
+      setNewPostLoading(false);
     }
   };
 
@@ -50,6 +78,20 @@ function HomePage({}: Props) {
   };
 
   useEffect(() => {
+    setPostsLoading(true);
+    async function fetchUser() {
+      try {
+        const { data: axiosData } = await axios.get<{ session: Session }>(
+          "http://localhost:3000/user/session"
+        );
+        const userId = axiosData.session.user.id;
+        setUserId(userId);
+      } catch (error) {
+        console.error("Error fetching user session:", error);
+      }
+    }
+    fetchUser();
+
     async function fetchPosts() {
       try {
         const { data: posts } = await axios.get<Post[]>(
@@ -57,8 +99,10 @@ function HomePage({}: Props) {
         );
         console.log(posts);
         setPosts(posts);
+        setPostsLoading(false);
       } catch (error) {
         console.error("Error fetching posts:", error);
+        setPostsLoading(false);
       }
     }
     fetchPosts();
@@ -103,6 +147,7 @@ function HomePage({}: Props) {
               Post
             </button>
           </div>
+          {newPostLoading && <ProgressBar style={"w-full mt-5"} />}
         </form>
         {posts.map((post) => (
           <PostCard
@@ -110,11 +155,21 @@ function HomePage({}: Props) {
             content={post.content}
             date_of_creation={post.date_of_creation}
             name={post.name}
+            id={post.id}
             t_identifier={post.t_identifier}
+            userId={userId}
+            likes={post.likes}
           />
         ))}
+        {postsLoading && (
+          <LoadingSpinner
+            style={
+              "w-7 h-7 text-gray-200 animate-spin fill-blue-400 mx-auto mt-[130px]"
+            }
+          />
+        )}
       </div>
-      <div className="h-screen px-10">
+      <div className="h-screen px-10 max-[1000px]:hidden">
         <form>
           <div className="relative mt-2 w-90 mx-auto">
             <div className="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
