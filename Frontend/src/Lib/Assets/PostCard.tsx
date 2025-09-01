@@ -6,6 +6,7 @@ import { FaRegHeart } from "react-icons/fa";
 import { FaEye } from "react-icons/fa";
 import { FaRegBookmark } from "react-icons/fa";
 import axios from "axios";
+import { useState } from "react";
 
 type Props = {
   id: number;
@@ -15,6 +16,7 @@ type Props = {
   t_identifier: string;
   userId: string | undefined;
   likes: string;
+  session_user_liked: boolean | null;
 };
 
 function PostCard({
@@ -25,9 +27,15 @@ function PostCard({
   t_identifier,
   userId,
   likes,
+  session_user_liked,
 }: Props) {
+  const [liked, setLiked] = useState<boolean | null>(session_user_liked);
+  const [numlikes, setnumLikes] = useState<number>(parseInt(likes));
+
   console.log(userId);
   async function handleLike() {
+    setLiked(true);
+    setnumLikes((numLikes) => numLikes + 1);
     try {
       const response = await axios.post(
         "http://localhost:3000/user/post/like",
@@ -38,6 +46,25 @@ function PostCard({
       );
       console.log(response);
     } catch (error) {
+      setLiked(null);
+      console.error("Error liking post:", error);
+    }
+  }
+
+  async function handleUnlike() {
+    setLiked(false);
+    setnumLikes((numLikes) => numLikes - 1);
+    try {
+      const response = await axios.post(
+        "http://localhost:3000/user/post/unlike",
+        {
+          postId: id,
+          userId: userId,
+        }
+      );
+      console.log(response);
+    } catch (error) {
+      setLiked(null);
       console.error("Error liking post:", error);
     }
   }
@@ -77,13 +104,13 @@ function PostCard({
         <div className="flex items-center gap-x-1 ">
           <FaRegHeart
             onClick={() => {
-              handleLike();
+              liked ? handleUnlike() : handleLike();
             }}
-            color="gray"
+            color={liked ? "red" : "gray"}
             size={18}
             className=""
           />
-          <p className="text-gray-500">{likes}</p>
+          <p className={`text-${liked ? "red" : "gray"}-500`}>{numlikes}</p>
         </div>
 
         <div className="flex items-center gap-x-1 ">

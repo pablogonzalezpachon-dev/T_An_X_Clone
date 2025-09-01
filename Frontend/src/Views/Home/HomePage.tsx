@@ -55,6 +55,7 @@ function HomePage({}: Props) {
           name: profileData[0].name,
           t_identifier: profileData[0].t_identifier,
           likes: "0",
+          session_user_liked: null,
         },
         ...posts,
       ]);
@@ -79,29 +80,24 @@ function HomePage({}: Props) {
 
   useEffect(() => {
     setPostsLoading(true);
-    async function fetchUser() {
-      try {
-        const { data: axiosData } = await axios.get<{ session: Session }>(
-          "http://localhost:3000/user/session"
-        );
-        const userId = axiosData.session.user.id;
-        setUserId(userId);
-      } catch (error) {
-        console.error("Error fetching user session:", error);
-      }
-    }
-    fetchUser();
-
     async function fetchPosts() {
       try {
-        const { data: posts } = await axios.get<Post[]>(
-          "http://localhost:3000/user/posts"
+        const { data: sessionResponse } = await axios.get<{ session: Session }>(
+          "http://localhost:3000/user/session"
+        );
+        const userId = sessionResponse.session.user.id;
+        setUserId(userId);
+        const { data: posts } = await axios.post<Post[]>(
+          "http://localhost:3000/user/posts",
+          {
+            userId,
+          }
         );
         console.log(posts);
         setPosts(posts);
         setPostsLoading(false);
       } catch (error) {
-        console.error("Error fetching posts:", error);
+        console.error("Error fetching data:", error);
         setPostsLoading(false);
       }
     }
@@ -159,6 +155,7 @@ function HomePage({}: Props) {
             t_identifier={post.t_identifier}
             userId={userId}
             likes={post.likes}
+            session_user_liked={post.session_user_liked}
           />
         ))}
         {postsLoading && (

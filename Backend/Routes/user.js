@@ -46,10 +46,11 @@ userRouter.post("/post", async (req, res) => {
   }
 });
 
-userRouter.get("/posts", async (req, res) => {
+userRouter.post("/posts", async (req, res) => {
+  const userId = req.body.userId;
   try {
     const posts =
-      await sql`select p.id, p.date_of_creation, p.content, u.name, u.t_identifier, count(l.id) AS likes from posts p left join profiles u on p.created_by = u.id left join likes l on p.id = l.post_id group by p.id, p.date_of_creation, p.content, u.name, u.t_identifier order by p.date_of_creation desc;`;
+      await sql`select p.id, p.date_of_creation, p.content, u.name, u.t_identifier, count(l.id) AS likes, BOOL_OR(l.who_liked = ${userId}) AS session_user_liked from posts p left join profiles u on p.created_by = u.id left join likes l on p.id = l.post_id group by p.id, p.date_of_creation, p.content, u.name, u.t_identifier order by p.date_of_creation desc;`;
     res.json(posts);
   } catch (error) {
     console.error("Error retrieving posts:", error);
@@ -67,6 +68,19 @@ userRouter.post("/post/like", async (req, res) => {
   } catch (error) {
     console.error("Error liking post:", error);
     res.status(500).json({ message: "Error liking post" });
+  }
+});
+
+userRouter.post("/post/unlike", async (req, res) => {
+  const postId = req.body.postId;
+
+  try {
+    const unlike =
+      await sql`DELETE FROM likes WHERE post_id = ${postId} AND who_liked = ${userId};`;
+    res.status(200).json({ message: "Post unliked successfully" });
+  } catch (error) {
+    console.error("Error unliking post:", error);
+    res.status(500).json({ message: "Error unliking post" });
   }
 });
 

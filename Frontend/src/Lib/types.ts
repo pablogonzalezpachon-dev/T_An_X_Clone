@@ -28,4 +28,5 @@ export type Post = {
   name: string;
   t_identifier: string;
   likes: string;
+  session_user_liked: boolean | null;
 };
