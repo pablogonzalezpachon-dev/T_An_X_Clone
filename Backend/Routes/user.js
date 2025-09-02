@@ -23,7 +23,7 @@ userRouter.get("/session", async (req, res) => {
 });
 
 userRouter.post("/profile", async (req, res) => {
-  const userId = req.body.id;
+  const userId = req.session.userId;
   try {
     const user = await sql`SELECT * FROM profiles WHERE id = ${userId};`;
     res.json(user);
@@ -35,7 +35,7 @@ userRouter.post("/profile", async (req, res) => {
 
 userRouter.post("/post", async (req, res) => {
   const content = req.body.content;
-  const userId = req.body.userId;
+  const userId = req.session.userId;
   try {
     const post =
       await sql`INSERT INTO posts (created_by, date_of_creation, content) VALUES (${userId}, ${new Date().toISOString()}, ${content});`;
@@ -47,7 +47,7 @@ userRouter.post("/post", async (req, res) => {
 });
 
 userRouter.post("/posts", async (req, res) => {
-  const userId = req.body.userId;
+  const userId = req.session.userId;
   try {
     const posts =
       await sql`select p.id, p.date_of_creation, p.content, u.name, u.t_identifier, count(l.id) AS likes, BOOL_OR(l.who_liked = ${userId}) AS session_user_liked from posts p left join profiles u on p.created_by = u.id left join likes l on p.id = l.post_id group by p.id, p.date_of_creation, p.content, u.name, u.t_identifier order by p.date_of_creation desc;`;
@@ -60,7 +60,7 @@ userRouter.post("/posts", async (req, res) => {
 
 userRouter.post("/post/like", async (req, res) => {
   const postId = req.body.postId;
-  const userId = req.body.userId;
+  const userId = req.session.userId;
   try {
     const like =
       await sql`INSERT INTO likes (post_id, who_liked) VALUES (${postId}, ${userId});`;
@@ -73,7 +73,7 @@ userRouter.post("/post/like", async (req, res) => {
 
 userRouter.post("/post/unlike", async (req, res) => {
   const postId = req.body.postId;
-
+  const userId = req.session.userId;
   try {
     const unlike =
       await sql`DELETE FROM likes WHERE post_id = ${postId} AND who_liked = ${userId};`;

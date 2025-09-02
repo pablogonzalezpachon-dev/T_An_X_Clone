@@ -60,14 +60,17 @@ authRouter.post("/login", async (req, res) => {
       "access",
       { expiresIn: 60 * 60 }
     );
-
     req.session.authorization = {
       accessToken,
     };
+    req.session.userId = data.user.id;
+    if (error) {
+      throw error;
+    }
 
     res.json({ message: `${data.user.email} succesfully logged in!` });
   } else {
-    console.log(error);
+    console.log(`Login error: ${error}`);
     res.status(403).json({ message: "Invalid credentials" });
   }
 });
@@ -101,20 +104,9 @@ authRouter.post("/email", async (req, res) => {
   }
 });
 
-authRouter.get("/session", async (req, res) => {
-  try {
-    const {
-      data: { session },
-      error,
-    } = await supabase.auth.getSession();
-
-    if (error) throw error;
-    res.json({ session: session });
-    return session;
-  } catch (error) {
-    console.error("Session retrieval error:", error);
-    return null;
-  }
+authRouter.get("/test", async (req, res) => {
+  let userId = req.session;
+  res.json({ message: "Test route accessed", user: userId });
 });
 
 export default authRouter;

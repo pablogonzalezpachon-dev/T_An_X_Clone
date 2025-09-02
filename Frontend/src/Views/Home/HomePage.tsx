@@ -35,17 +35,11 @@ function HomePage({}: Props) {
     console.log(data);
 
     try {
-      const { data: axiosData } = await axios.get<{ session: Session }>(
-        "http://localhost:3000/user/session"
-      );
-      const userId = axiosData.session.user.id;
-      setUserId(userId);
       const { data: profileData } = await axios.post<UserProfile[]>(
         `http://localhost:3000/user/profile`,
-        {
-          id: userId,
-        }
+        {}
       );
+      const userId = profileData[0].id;
 
       setPosts([
         {
@@ -62,7 +56,6 @@ function HomePage({}: Props) {
 
       const response = await axios.post("http://localhost:3000/user/post", {
         ...data,
-        userId,
       });
       console.log(response);
       setNewPostLoading(false);
@@ -89,9 +82,7 @@ function HomePage({}: Props) {
         setUserId(userId);
         const { data: posts } = await axios.post<Post[]>(
           "http://localhost:3000/user/posts",
-          {
-            userId,
-          }
+          {}
         );
         console.log(posts);
         setPosts(posts);

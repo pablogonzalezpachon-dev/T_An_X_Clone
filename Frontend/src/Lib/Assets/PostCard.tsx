@@ -52,7 +52,7 @@ function PostCard({
   }
 
   async function handleUnlike() {
-    setLiked(false);
+    setLiked(null);
     setnumLikes((numLikes) => numLikes - 1);
     try {
       const response = await axios.post(
@@ -64,8 +64,8 @@ function PostCard({
       );
       console.log(response);
     } catch (error) {
-      setLiked(null);
-      console.error("Error liking post:", error);
+      setLiked(true);
+      console.error("Error unliking post:", error);
     }
   }
 
