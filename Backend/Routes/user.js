@@ -22,7 +22,7 @@ userRouter.get("/session", async (req, res) => {
   }
 });
 
-userRouter.post("/profile", async (req, res) => {
+userRouter.get("/profile", async (req, res) => {
   const userId = req.session.userId;
   try {
     const user = await sql`SELECT * FROM profiles WHERE id = ${userId};`;
@@ -46,11 +46,11 @@ userRouter.post("/post", async (req, res) => {
   }
 });
 
-userRouter.post("/posts", async (req, res) => {
+userRouter.get("/posts", async (req, res) => {
   const userId = req.session.userId;
   try {
     const posts =
-      await sql`select p.id, p.date_of_creation, p.content, u.name, u.t_identifier, count(l.id) AS likes, BOOL_OR(l.who_liked = ${userId}) AS session_user_liked from posts p left join profiles u on p.created_by = u.id left join likes l on p.id = l.post_id group by p.id, p.date_of_creation, p.content, u.name, u.t_identifier order by p.date_of_creation desc;`;
+      await sql`select p.id, p.date_of_creation, p.content, u.name, u.t_identifier, count(l.id) AS likes, BOOL_OR(l.who_liked = ${userId}) AS active_user_liked, BOOL_OR(p.created_by = ${userId}) AS active_user_creator from posts p left join profiles u on p.created_by = u.id left join likes l on p.id = l.post_id group by p.id, p.date_of_creation, p.content, u.name, u.t_identifier order by p.date_of_creation desc;`;
     res.json(posts);
   } catch (error) {
     console.error("Error retrieving posts:", error);
@@ -81,6 +81,22 @@ userRouter.post("/post/unlike", async (req, res) => {
   } catch (error) {
     console.error("Error unliking post:", error);
     res.status(500).json({ message: "Error unliking post" });
+  }
+});
+
+userRouter.delete("/post/:id", async (req, res) => {
+  const postId = req.params.id;
+  const userId = req.session.userId;
+  try {
+    const result =
+      await sql`DELETE FROM posts WHERE id = ${postId} AND created_by = ${userId};`;
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+    res.status(200).json({ message: "Post deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting post:", error);
+    res.status(500).json({ message: "Error deleting post" });
   }
 });
 

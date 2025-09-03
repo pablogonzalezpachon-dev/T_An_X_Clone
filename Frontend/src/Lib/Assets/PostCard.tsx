@@ -7,6 +7,7 @@ import { FaEye } from "react-icons/fa";
 import { FaRegBookmark } from "react-icons/fa";
 import axios from "axios";
 import { useState } from "react";
+import { BsThreeDots } from "react-icons/bs";
 
 type Props = {
   id: number;
@@ -14,9 +15,10 @@ type Props = {
   date_of_creation: string;
   name: string;
   t_identifier: string;
-  userId: string | undefined;
   likes: string;
-  session_user_liked: boolean | null;
+  active_user_liked: boolean | null;
+  active_user_creator: boolean | null;
+  onDelete: (postId: number) => Promise<void>;
 };
 
 function PostCard({
@@ -25,15 +27,16 @@ function PostCard({
   date_of_creation,
   name,
   t_identifier,
-  userId,
   likes,
-  session_user_liked,
+  active_user_liked,
+  active_user_creator,
+  onDelete,
 }: Props) {
-  const [liked, setLiked] = useState<boolean | null>(session_user_liked);
+  const [liked, setLiked] = useState<boolean | null>(active_user_liked);
   const [numlikes, setnumLikes] = useState<number>(parseInt(likes));
 
-  console.log(userId);
   async function handleLike() {
+    const originalNumLikes = numlikes;
     setLiked(true);
     setnumLikes((numLikes) => numLikes + 1);
     try {
@@ -41,17 +44,18 @@ function PostCard({
         "http://localhost:3000/user/post/like",
         {
           postId: id,
-          userId: userId,
         }
       );
       console.log(response);
     } catch (error) {
       setLiked(null);
+      setnumLikes(originalNumLikes);
       console.error("Error liking post:", error);
     }
   }
 
   async function handleUnlike() {
+    const originalNumLikes = numlikes;
     setLiked(null);
     setnumLikes((numLikes) => numLikes - 1);
     try {
@@ -59,12 +63,12 @@ function PostCard({
         "http://localhost:3000/user/post/unlike",
         {
           postId: id,
-          userId: userId,
         }
       );
       console.log(response);
     } catch (error) {
       setLiked(true);
+      setnumLikes(originalNumLikes);
       console.error("Error unliking post:", error);
     }
   }
@@ -84,7 +88,15 @@ function PostCard({
           </p>
         </div>
         <div>
-          <SlUserFollow size={20} className="mt-1" />
+          {active_user_creator ? (
+            <BsThreeDots
+              onClick={() => onDelete(id)}
+              size={20}
+              className="mt-1"
+            />
+          ) : (
+            <SlUserFollow size={20} className="mt-1" />
+          )}
         </div>
       </div>
       <div className="px-13 mt-[-30px]">

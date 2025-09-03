@@ -13,7 +13,7 @@ import { useParams } from "react-router";
 type Props = {};
 
 function ProfilePage({}: Props) {
-  let { id } = useParams();
+  let { userId } = useParams();
   const [loading, setLoading] = useState(false);
   const [profileData, setProfileData] = useState<UserProfile | null>(null);
 
@@ -21,11 +21,8 @@ function ProfilePage({}: Props) {
     setLoading(true);
     async function fetchData() {
       try {
-        const { data } = await axios.post<UserProfile[]>(
-          `http://localhost:3000/user/profile`,
-          {
-            id: id,
-          }
+        const { data } = await axios.get<UserProfile[]>(
+          `http://localhost:3000/user/profile`
         );
         console.log(data);
         setProfileData(data[0]);

@@ -1,15 +1,10 @@
 import axios from "axios";
 import { use, useContext, useEffect, useMemo, useState } from "react";
 import { IoSearchOutline } from "react-icons/io5";
-import { AuthContext } from "../../Lib/Contexts/AuthContext";
-import { Navigate, useNavigate } from "react-router";
 import type { Post, UserProfile } from "../../Lib/types";
-
 import { useForm, type SubmitHandler } from "react-hook-form";
-import type { Session } from "@supabase/supabase-js";
 import PostCard from "../../Lib/Assets/PostCard";
 import LoadingSpinner from "../../Lib/Assets/LoadingSpinner";
-import { set } from "zod";
 import ProgressBar from "../../Lib/Assets/ProgressBar";
 
 type Inputs = {
@@ -24,7 +19,6 @@ function HomePage({}: Props) {
   const [postsLoading, setPostsLoading] = useState(false);
   const [newPostLoading, setNewPostLoading] = useState(false);
   const { register, handleSubmit, reset } = useForm<Inputs>({});
-  const [userId, setUserId] = useState<string | undefined>();
 
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
     setContentState(false);
@@ -35,12 +29,9 @@ function HomePage({}: Props) {
     console.log(data);
 
     try {
-      const { data: profileData } = await axios.post<UserProfile[]>(
-        `http://localhost:3000/user/profile`,
-        {}
+      const { data: profileData } = await axios.get<UserProfile[]>(
+        `http://localhost:3000/user/profile`
       );
-      const userId = profileData[0].id;
-
       setPosts([
         {
           ...data,
@@ -49,7 +40,8 @@ function HomePage({}: Props) {
           name: profileData[0].name,
           t_identifier: profileData[0].t_identifier,
           likes: "0",
-          session_user_liked: null,
+          active_user_liked: null,
+          active_user_creator: true,
         },
         ...posts,
       ]);
@@ -75,25 +67,33 @@ function HomePage({}: Props) {
     setPostsLoading(true);
     async function fetchPosts() {
       try {
-        const { data: sessionResponse } = await axios.get<{ session: Session }>(
-          "http://localhost:3000/user/session"
-        );
-        const userId = sessionResponse.session.user.id;
-        setUserId(userId);
-        const { data: posts } = await axios.post<Post[]>(
-          "http://localhost:3000/user/posts",
-          {}
+        const { data: posts } = await axios.get<Post[]>(
+          "http://localhost:3000/user/posts"
         );
         console.log(posts);
         setPosts(posts);
         setPostsLoading(false);
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error("Error fetching posts:", error);
         setPostsLoading(false);
       }
     }
     fetchPosts();
   }, []);
+
+  const handleDelete = async (postId: number) => {
+    const originalPosts = posts;
+    try {
+      setPosts((prevPosts) => prevPosts.filter((post) => post.id !== postId));
+      const response = await axios.delete(
+        `http://localhost:3000/user/post/${postId}`
+      );
+      console.log(response);
+    } catch (error) {
+      setPosts(originalPosts);
+      console.error("Error deleting post:", error);
+    }
+  };
 
   return (
     <div className="grid grid-cols-[1fr_clamp(0px,35vw,900px)] max-[1000px]:grid-cols-[1fr]">
@@ -144,9 +144,10 @@ function HomePage({}: Props) {
             name={post.name}
             id={post.id}
             t_identifier={post.t_identifier}
-            userId={userId}
             likes={post.likes}
-            session_user_liked={post.session_user_liked}
+            active_user_liked={post.active_user_liked}
+            active_user_creator={post.active_user_creator}
+            onDelete={handleDelete}
           />
         ))}
         {postsLoading && (
