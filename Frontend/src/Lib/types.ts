@@ -27,7 +27,9 @@ export type Post = {
   date_of_creation: string;
   name: string;
   t_identifier: string;
+  user_id: string;
   likes: string;
   active_user_liked: boolean | null;
   active_user_creator: boolean | null;
+  reply_to: number | null;
 };

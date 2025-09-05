@@ -102,6 +102,8 @@ export function timeAgo(
   const secondsAgo = Math.floor((now.getTime() - d.getTime()) / 1000);
   const minutesAgo = Math.floor(secondsAgo / 60);
   const hoursAgo = Math.floor(minutesAgo / 60);
+  const daysAgo = Math.floor(hoursAgo / 24);
+  const monthsAgo = Math.floor(daysAgo / 30);
 
   let timeString = "";
   if (secondsAgo < 60) {
@@ -110,12 +112,49 @@ export function timeAgo(
     timeString = `${minutesAgo} m`;
   } else if (hoursAgo < 24) {
     timeString = `${hoursAgo} h`;
+  } else if (now.getFullYear === d.getFullYear) {
+    timeString = new Intl.DateTimeFormat(locale, {
+      month: "short",
+      day: "2-digit",
+      timeZone,
+    }).format(d);
   } else {
     timeString = new Intl.DateTimeFormat(locale, {
       month: "short",
-      year: "2-digit",
+      day: "2-digit",
+      year: "numeric",
       timeZone,
     }).format(d);
   }
   return timeString;
 }
+
+export function formatTimeDotDate(
+  iso: string,
+  opts?: { locale?: string; timeZone?: string }
+) {
+  const { locale = "en-US", timeZone = "UTC" } = opts ?? {};
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+
+  const time = new Intl.DateTimeFormat(locale, {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+    timeZone,
+  }).format(d);
+
+  const date = new Intl.DateTimeFormat(locale, {
+    month: "short",
+    day: "numeric", // ensures "Sep 4" (no leading zero)
+    year: "numeric",
+    timeZone,
+  }).format(d);
+
+  return `${time} · ${date}`;
+}
+
+export const autoGrow = (el: HTMLTextAreaElement) => {
+  el.style.height = "0px"; // reset
+  el.style.height = el.scrollHeight + "px"; // fit content
+};

@@ -8,6 +8,7 @@ import { FaRegBookmark } from "react-icons/fa";
 import axios from "axios";
 import { useState } from "react";
 import { BsThreeDots } from "react-icons/bs";
+import { useNavigate } from "react-router";
 
 type Props = {
   id: number;
@@ -19,6 +20,7 @@ type Props = {
   active_user_liked: boolean | null;
   active_user_creator: boolean | null;
   onDelete: (postId: number) => Promise<void>;
+  user_id: string;
 };
 
 function PostCard({
@@ -31,7 +33,9 @@ function PostCard({
   active_user_liked,
   active_user_creator,
   onDelete,
+  user_id,
 }: Props) {
+  const navigate = useNavigate();
   const [liked, setLiked] = useState<boolean | null>(active_user_liked);
   const [numlikes, setnumLikes] = useState<number>(parseInt(likes));
 
@@ -74,7 +78,12 @@ function PostCard({
   }
 
   return (
-    <div className="w-full border-b border-gray-200 p-4">
+    <div
+      className="w-full border-b border-gray-200 p-4 cursor-pointer"
+      onClick={() => {
+        navigate("/" + user_id + "/status/" + id);
+      }}
+    >
       <div className="w-full flex h-15 justify-between">
         <div className="flex gap-x-2">
           <div className="w-11 h-11 rounded-full bg-black"></div>
@@ -90,7 +99,10 @@ function PostCard({
         <div>
           {active_user_creator ? (
             <BsThreeDots
-              onClick={() => onDelete(id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(id);
+              }}
               size={20}
               className="mt-1"
             />
@@ -113,9 +125,10 @@ function PostCard({
           <p className="text-gray-500">0</p>
         </div>
 
-        <div className="flex items-center gap-x-1 ">
+        <div className="flex items-center gap-x-2 ">
           <FaRegHeart
-            onClick={() => {
+            onClick={(e) => {
+              e.stopPropagation();
               liked ? handleUnlike() : handleLike();
             }}
             color={liked ? "red" : "gray"}

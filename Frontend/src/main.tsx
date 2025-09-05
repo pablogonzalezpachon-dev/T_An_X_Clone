@@ -14,6 +14,7 @@ import axios from "axios";
 import AuthProvider from "./Lib/Contexts/AuthContext.tsx";
 import RepliesPage from "./Views/Profile/RepliesPage.tsx";
 import LikesPage from "./Views/Profile/LikesPage.tsx";
+import PostPage from "./Views/Post/PostPage.tsx";
 
 axios.defaults.withCredentials = true;
 
@@ -25,6 +26,7 @@ createRoot(document.getElementById("root")!).render(
 
         <Route element={<MainLayout />}>
           <Route path="/home" element={<HomePage />} />
+          <Route path="/:userId/status/:postId" element={<PostPage />} />
           <Route path="/explore" element={<ExplorePage />} />
           <Route path="/messages" element={<MessagesPage />} />
           <Route path="/nexus" element={<NexusPage />} />

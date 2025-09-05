@@ -36,13 +36,14 @@ userRouter.get("/profile", async (req, res) => {
 userRouter.post("/post", async (req, res) => {
   const content = req.body.content;
   const userId = req.session.userId;
+  const replyTo = req.body.replyTo;
   try {
     const post =
-      await sql`INSERT INTO posts (created_by, date_of_creation, content) VALUES (${userId}, ${new Date().toISOString()}, ${content});`;
-    res.status(201).json({ message: "Post created successfully" });
+      await sql`INSERT INTO posts (created_by, date_of_creation, content, reply_to) VALUES (${userId}, ${new Date().toISOString()}, ${content}, ${replyTo}) returning id;`;
+    return res.status(201).json(post[0].id);
   } catch (e) {
     console.error("Error creating post:", e);
-    res.status(500).json({ message: "Error creating post" });
+    return res.status(500).json({ message: "Error creating post" });
   }
 });
 
@@ -50,7 +51,7 @@ userRouter.get("/posts", async (req, res) => {
   const userId = req.session.userId;
   try {
     const posts =
-      await sql`select p.id, p.date_of_creation, p.content, u.name, u.t_identifier, count(l.id) AS likes, BOOL_OR(l.who_liked = ${userId}) AS active_user_liked, BOOL_OR(p.created_by = ${userId}) AS active_user_creator from posts p left join profiles u on p.created_by = u.id left join likes l on p.id = l.post_id group by p.id, p.date_of_creation, p.content, u.name, u.t_identifier order by p.date_of_creation desc;`;
+      await sql`select p.id, p.date_of_creation, p.content, u.name, u.t_identifier, u.id as user_id, count(l.id) AS likes, BOOL_OR(l.who_liked = ${userId}) AS active_user_liked, BOOL_OR(p.created_by = ${userId}) AS active_user_creator, p.reply_to from posts p left join profiles u on p.created_by = u.id left join likes l on p.id = l.post_id where p.reply_to IS NULL group by p.id, p.date_of_creation, p.content, u.name, u.t_identifier, u.id order by p.date_of_creation desc;`;
     res.json(posts);
   } catch (error) {
     console.error("Error retrieving posts:", error);
@@ -97,6 +98,36 @@ userRouter.delete("/post/:id", async (req, res) => {
   } catch (error) {
     console.error("Error deleting post:", error);
     res.status(500).json({ message: "Error deleting post" });
+  }
+});
+
+userRouter.get("/post/:id", async (req, res) => {
+  const active_user = req.session.userId;
+  const postId = req.params.id;
+  try {
+    const postData =
+      await sql`select p.id, p.date_of_creation, p.content, u.name, u.t_identifier, u.id as user_id, count(l.id) AS likes, BOOL_OR(l.who_liked = ${active_user}) AS active_user_liked, BOOL_OR(p.created_by = ${active_user}) as active_user_creator from posts p left join profiles u on p.created_by = u.id left join likes l on p.id = l.post_id where p.id = ${postId} group by p.id, p.date_of_creation, p.content, u.name, u.t_identifier, u.id; `;
+    if (postData.length === 0) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+    res.status(200).json(postData[0]);
+  } catch (error) {
+    console.error("Error loading post:", error);
+    res.status(500).json({ message: "Error loading post" });
+  }
+});
+
+userRouter.get("/post/replies/:id", async (req, res) => {
+  const active_user = req.session.userId;
+  const postId = req.params.id;
+  try {
+    const repliesData =
+      await sql`select p.id, p.date_of_creation, p.content, u.name, u.t_identifier, u.id as user_id, count(l.id) AS likes, BOOL_OR(l.who_liked = ${active_user}) AS active_user_liked, BOOL_OR(p.created_by = ${active_user}) as active_user_creator from posts p left join profiles u on p.created_by = u.id left join likes l on p.id = l.post_id where reply_to=${postId} group by p.id, p.date_of_creation, p.content, u.name, u.t_identifier, u.id; `;
+
+    res.status(200).json(repliesData);
+  } catch (error) {
+    console.error("Error loading replies:", error);
+    res.status(500).json({ message: "Error loading replies" });
   }
 });
 

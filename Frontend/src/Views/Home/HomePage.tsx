@@ -6,6 +6,8 @@ import { useForm, type SubmitHandler } from "react-hook-form";
 import PostCard from "../../Lib/Assets/PostCard";
 import LoadingSpinner from "../../Lib/Assets/LoadingSpinner";
 import ProgressBar from "../../Lib/Assets/ProgressBar";
+import { useNavigate } from "react-router";
+import { autoGrow } from "../../Lib/functions";
 
 type Inputs = {
   content: string;
@@ -14,6 +16,8 @@ type Inputs = {
 type Props = {};
 
 function HomePage({}: Props) {
+  let navigate = useNavigate();
+
   const [posts, setPosts] = useState<Post[]>([]);
   const [contentState, setContentState] = useState(false);
   const [postsLoading, setPostsLoading] = useState(false);
@@ -21,6 +25,7 @@ function HomePage({}: Props) {
   const { register, handleSubmit, reset } = useForm<Inputs>({});
 
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
+    const originalPosts = posts;
     setContentState(false);
     setNewPostLoading(true);
     reset();
@@ -32,6 +37,7 @@ function HomePage({}: Props) {
       const { data: profileData } = await axios.get<UserProfile[]>(
         `http://localhost:3000/user/profile`
       );
+
       setPosts([
         {
           ...data,
@@ -42,25 +48,41 @@ function HomePage({}: Props) {
           likes: "0",
           active_user_liked: null,
           active_user_creator: true,
+          user_id: profileData[0].id,
+          reply_to: null,
         },
-        ...posts,
+        ...originalPosts,
       ]);
 
-      const response = await axios.post("http://localhost:3000/user/post", {
-        ...data,
-      });
-      console.log(response);
+      const { data: postId } = await axios.post<number>(
+        "http://localhost:3000/user/post",
+        {
+          ...data,
+          replyTo: null,
+        }
+      );
+      setPosts([
+        {
+          ...data,
+          id: postId,
+          date_of_creation: new Date().toISOString(),
+          name: profileData[0].name,
+          t_identifier: profileData[0].t_identifier,
+          likes: "0",
+          active_user_liked: null,
+          active_user_creator: true,
+          user_id: profileData[0].id,
+          reply_to: null,
+        },
+        ...originalPosts,
+      ]);
+
       setNewPostLoading(false);
     } catch (e) {
       setPosts(posts.slice(1));
       console.error("Error creating post:", e);
       setNewPostLoading(false);
     }
-  };
-
-  const autoGrow = (el: HTMLTextAreaElement) => {
-    el.style.height = "0px"; // reset
-    el.style.height = el.scrollHeight + "px"; // fit content
   };
 
   useEffect(() => {
@@ -148,6 +170,7 @@ function HomePage({}: Props) {
             active_user_liked={post.active_user_liked}
             active_user_creator={post.active_user_creator}
             onDelete={handleDelete}
+            user_id={post.user_id}
           />
         ))}
         {postsLoading && (
