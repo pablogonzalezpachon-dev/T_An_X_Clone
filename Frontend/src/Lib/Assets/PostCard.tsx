@@ -87,7 +87,15 @@ function PostCard({
       <div className="w-full flex h-15 justify-between">
         <div className="flex gap-x-2">
           <div className="w-11 h-11 rounded-full bg-black"></div>
-          <p className="font-semibold truncate ">{name}</p>
+          <p
+            className="font-semibold truncate hover:underline"
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/${user_id}`);
+            }}
+          >
+            {name}
+          </p>
           <p className="text-gray-500">
             {t_identifier} ·{" "}
             {timeAgo(date_of_creation, {

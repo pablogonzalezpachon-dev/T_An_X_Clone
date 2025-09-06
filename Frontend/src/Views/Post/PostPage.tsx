@@ -37,6 +37,7 @@ function PostPage({}: Props) {
   const [replies, setReplies] = useState<Post[]>([]);
 
   const [postLoading, setPostLoading] = useState<boolean>(false);
+  const [repliesLoading, setRepliesLoading] = useState<boolean>(false);
   const { register, handleSubmit, reset } = useForm<Inputs>({});
 
   async function handleLike() {
@@ -138,6 +139,8 @@ function PostPage({}: Props) {
 
   useEffect(() => {
     const fetchPost = async () => {
+      setReplies([]);
+      setRepliesLoading(true);
       setPostLoading(true);
       try {
         const { data: postData } = await axios.get<Post>(
@@ -156,6 +159,7 @@ function PostPage({}: Props) {
       } catch (e) {
         console.error("Error fetching data:", e);
       }
+      setRepliesLoading(false);
       setPostLoading(false);
     };
     fetchPost();
@@ -311,6 +315,9 @@ function PostPage({}: Props) {
             user_id={reply.user_id}
           />
         ))}
+        {repliesLoading && (
+          <LoadingSpinner style="w-7 h-7 text-gray-200 animate-spin fill-blue-400 mx-auto mt-20" />
+        )}
       </div>
       <div className="h-screen px-10 max-[1000px]:hidden">
         <form>

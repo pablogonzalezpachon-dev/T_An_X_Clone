@@ -37,23 +37,6 @@ function HomePage({}: Props) {
       const { data: profileData } = await axios.get<UserProfile[]>(
         `http://localhost:3000/user/profile`
       );
-
-      setPosts([
-        {
-          ...data,
-          id: Math.random(),
-          date_of_creation: new Date().toISOString(),
-          name: profileData[0].name,
-          t_identifier: profileData[0].t_identifier,
-          likes: "0",
-          active_user_liked: null,
-          active_user_creator: true,
-          user_id: profileData[0].id,
-          reply_to: null,
-        },
-        ...originalPosts,
-      ]);
-
       const { data: postId } = await axios.post<number>(
         "http://localhost:3000/user/post",
         {

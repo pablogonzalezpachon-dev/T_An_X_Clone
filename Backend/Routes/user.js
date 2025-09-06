@@ -22,6 +22,17 @@ userRouter.get("/session", async (req, res) => {
   }
 });
 
+userRouter.get("/profile/:userId", async (req, res) => {
+  const userId = req.params.userId;
+  try {
+    const user = await sql`SELECT * FROM profiles WHERE id = ${userId};`;
+    res.json(user);
+  } catch (error) {
+    console.error("Error retrieving user profile:", error);
+    res.status(500).json({ message: "Error retrieving user profile" });
+  }
+});
+
 userRouter.get("/profile", async (req, res) => {
   const userId = req.session.userId;
   try {
@@ -122,7 +133,7 @@ userRouter.get("/post/replies/:id", async (req, res) => {
   const postId = req.params.id;
   try {
     const repliesData =
-      await sql`select p.id, p.date_of_creation, p.content, u.name, u.t_identifier, u.id as user_id, count(l.id) AS likes, BOOL_OR(l.who_liked = ${active_user}) AS active_user_liked, BOOL_OR(p.created_by = ${active_user}) as active_user_creator from posts p left join profiles u on p.created_by = u.id left join likes l on p.id = l.post_id where reply_to=${postId} group by p.id, p.date_of_creation, p.content, u.name, u.t_identifier, u.id; `;
+      await sql`select p.id, p.date_of_creation, p.content, u.name, u.t_identifier, u.id as user_id, count(l.id) AS likes, BOOL_OR(l.who_liked = ${active_user}) AS active_user_liked, BOOL_OR(p.created_by = ${active_user}) as active_user_creator from posts p left join profiles u on p.created_by = u.id left join likes l on p.id = l.post_id where reply_to=${postId} group by p.id, p.date_of_creation, p.content, u.name, u.t_identifier, u.id order by p.date_of_creation desc; `;
 
     res.status(200).json(repliesData);
   } catch (error) {

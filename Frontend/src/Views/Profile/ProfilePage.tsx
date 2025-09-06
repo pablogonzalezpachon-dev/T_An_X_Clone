@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { IoSearchOutline } from "react-icons/io5";
 import { IoIosArrowRoundBack } from "react-icons/io";
 import { FaRegCalendarAlt } from "react-icons/fa";
-import { Link, Outlet } from "react-router";
+import { Link, Outlet, useNavigate } from "react-router";
 import axios from "axios";
 import type { Session } from "@supabase/supabase-js";
 import type { UserProfile } from "../../Lib/types";
@@ -13,7 +13,9 @@ import { useParams } from "react-router";
 type Props = {};
 
 function ProfilePage({}: Props) {
+  const navigate = useNavigate();
   let { userId } = useParams();
+  console.log(userId);
   const [loading, setLoading] = useState(false);
   const [profileData, setProfileData] = useState<UserProfile | null>(null);
 
@@ -22,8 +24,9 @@ function ProfilePage({}: Props) {
     async function fetchData() {
       try {
         const { data } = await axios.get<UserProfile[]>(
-          `http://localhost:3000/user/profile`
+          `http://localhost:3000/user/profile/${userId}`
         );
+
         console.log(data);
         setProfileData(data[0]);
         setLoading(false);
@@ -33,11 +36,16 @@ function ProfilePage({}: Props) {
       }
     }
     fetchData();
-  }, []);
+  }, [userId]);
 
   return (
     <div className="grid grid-cols-[1fr_clamp(0px,35vw,900px)] max-[1000px]:grid-cols-[1fr]">
-      <div className="h-screen border-x border-gray-200">
+      <div
+        className="h-screen border-x border-gray-200"
+        onClick={() => {
+          navigate(-1);
+        }}
+      >
         <div className="flex gap-x-8 border-b border-gray-200 pl-3 ">
           <IoIosArrowRoundBack size={30} className="my-auto" />
           <div className="w-full h-15 items-center place-content-center gap-x-40">
@@ -71,16 +79,19 @@ function ProfilePage({}: Props) {
             </div>
 
             <div className="w-full flex justify-evenly mt-8 mb-2">
-              <Link to="/profile" className="font-semibold text-gray-500">
+              <Link to={`/${userId}`} className="font-semibold text-gray-500">
                 Posts
               </Link>
               <Link
-                to="/profile/replies"
+                to={`/${userId}/with_replies`}
                 className="font-semibold text-gray-500"
               >
                 Replies
               </Link>
-              <Link to="/profile/likes" className="font-semibold text-gray-500">
+              <Link
+                to={`/${userId}/likes`}
+                className="font-semibold text-gray-500"
+              >
                 Likes
               </Link>
             </div>

@@ -31,8 +31,8 @@ createRoot(document.getElementById("root")!).render(
           <Route path="/messages" element={<MessagesPage />} />
           <Route path="/nexus" element={<NexusPage />} />
 
-          <Route path=":id" element={<ProfilePage />}>
-            <Route path="replies" element={<RepliesPage />} />
+          <Route path="/:userId" element={<ProfilePage />}>
+            <Route path="with_replies" element={<RepliesPage />} />
             <Route path="likes" element={<LikesPage />} />
           </Route>
 
