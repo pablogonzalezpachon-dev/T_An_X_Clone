@@ -79,7 +79,7 @@ function PostCard({
 
   return (
     <div
-      className="w-full border-b border-gray-200 p-4 cursor-pointer"
+      className="w-full border-b border-x border-gray-200 p-4 cursor-pointer"
       onClick={() => {
         navigate("/" + user_id + "/status/" + id);
       }}

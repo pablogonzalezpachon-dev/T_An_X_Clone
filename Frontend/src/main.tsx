@@ -15,6 +15,7 @@ import AuthProvider from "./Lib/Contexts/AuthContext.tsx";
 import RepliesPage from "./Views/Profile/RepliesPage.tsx";
 import LikesPage from "./Views/Profile/LikesPage.tsx";
 import PostPage from "./Views/Post/PostPage.tsx";
+import MediaPage from "./Views/Profile/MediaPage.tsx";
 
 axios.defaults.withCredentials = true;
 
@@ -33,6 +34,7 @@ createRoot(document.getElementById("root")!).render(
 
           <Route path="/:userId" element={<ProfilePage />}>
             <Route path="with_replies" element={<RepliesPage />} />
+            <Route path="media" element={<MediaPage />} />
             <Route path="likes" element={<LikesPage />} />
           </Route>
 

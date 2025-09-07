@@ -5,10 +5,12 @@ import { FaRegCalendarAlt } from "react-icons/fa";
 import { Link, Outlet, useNavigate } from "react-router";
 import axios from "axios";
 import type { Session } from "@supabase/supabase-js";
-import type { UserProfile } from "../../Lib/types";
+import type { Auth, Post, UserProfile } from "../../Lib/types";
 import { formatJoinedMonthYear } from "../../Lib/functions";
 import LoadingSpinner from "../../Lib/Assets/LoadingSpinner";
 import { useParams } from "react-router";
+import { MdOutlineEmail } from "react-icons/md";
+import PostCard from "../../Lib/Assets/PostCard";
 
 type Props = {};
 
@@ -18,17 +20,30 @@ function ProfilePage({}: Props) {
   console.log(userId);
   const [loading, setLoading] = useState(false);
   const [profileData, setProfileData] = useState<UserProfile | null>(null);
+  const [activeUserId, setActiveUserId] = useState<string>();
+  const [profileUserId, setProfileUserId] = useState<string>();
+  const [profilePosts, setProfilePosts] = useState<Post[]>();
 
   useEffect(() => {
     setLoading(true);
+    setProfileUserId(userId);
     async function fetchData() {
       try {
-        const { data } = await axios.get<UserProfile[]>(
+        const { data: profileData } = await axios.get<UserProfile[]>(
           `http://localhost:3000/user/profile/${userId}`
         );
+        const { data: sessionResponse } = await axios.get<{
+          user: { data: Auth; exp: number; iat: number };
+        }>("http://localhost:3000/session");
+        setActiveUserId(sessionResponse.user.data.user.id);
 
-        console.log(data);
-        setProfileData(data[0]);
+        const { data: profilePosts } = await axios.get<Post[]>(
+          `http://localhost:3000/user/profile/${userId}/posts`
+        );
+        setProfilePosts(profilePosts);
+
+        console.log(profileData);
+        setProfileData(profileData[0]);
         setLoading(false);
       } catch (e) {
         console.log(e);
@@ -40,14 +55,15 @@ function ProfilePage({}: Props) {
 
   return (
     <div className="grid grid-cols-[1fr_clamp(0px,35vw,900px)] max-[1000px]:grid-cols-[1fr]">
-      <div
-        className="h-screen border-x border-gray-200"
-        onClick={() => {
-          navigate(-1);
-        }}
-      >
+      <div className="h-screen border-x border-gray-200">
         <div className="flex gap-x-8 border-b border-gray-200 pl-3 ">
-          <IoIosArrowRoundBack size={30} className="my-auto" />
+          <IoIosArrowRoundBack
+            size={30}
+            className="my-auto"
+            onClick={() => {
+              navigate(-1);
+            }}
+          />
           <div className="w-full h-15 items-center place-content-center gap-x-40">
             <p className="font-bold text-xl">{profileData?.name}</p>
             <p className="text-gray-600">0 posts</p>
@@ -56,11 +72,23 @@ function ProfilePage({}: Props) {
         <div className="w-full border-b border-gray-200">
           <div className="w-full h-50 bg-gray-300"></div>
           <div className="w-35 h-35 bg-gray-500 rounded-full border border-white border-5 mt-[-70px] ml-4 "></div>
-          <div className="w-full flex justify-end">
-            <button className="border border-gray-300 rounded-3xl w-30 text-md font-semibold h-10 mr-3 mt-[-60px]">
-              Edit profile
-            </button>
-          </div>
+          {activeUserId === profileUserId ? (
+            <div className="w-full flex justify-end">
+              <button className="border border-gray-300 rounded-3xl w-30 text-md font-semibold h-10 mr-3 mt-[-60px]">
+                Edit profile
+              </button>
+            </div>
+          ) : (
+            <div className="w-full flex justify-end gap-x-3">
+              <button className="h-10 w-10 border border-gray-300 rounded-full mt-[-60px]">
+                <MdOutlineEmail className="m-auto" size={22} />
+              </button>
+              <button className="border border-gray-300 bg-black text-white rounded-3xl w-25 text-md font-bold h-10 mr-3 mt-[-60px]">
+                Follow
+              </button>
+            </div>
+          )}
+
           <div className="flex flex-col px-5 mt-2">
             <p className="font-bold text-2xl">{profileData?.name}</p>
             <p className="text-gray-600">{profileData?.t_identifier}</p>
@@ -89,8 +117,16 @@ function ProfilePage({}: Props) {
                 Replies
               </Link>
               <Link
-                to={`/${userId}/likes`}
+                to={`/${userId}/media`}
                 className="font-semibold text-gray-500"
+              >
+                Media
+              </Link>
+              <Link
+                to={`/${userId}/likes`}
+                className={`font-semibold text-gray-500 ${
+                  activeUserId === profileUserId ? "" : "hidden"
+                }`}
               >
                 Likes
               </Link>
@@ -105,6 +141,22 @@ function ProfilePage({}: Props) {
           )}
         </div>
         <Outlet />
+        {profilePosts?.map((post) => (
+          <PostCard
+            id={post.id}
+            content={post.content}
+            date_of_creation={post.date_of_creation}
+            name={post.name}
+            t_identifier={post.t_identifier}
+            likes={post.likes}
+            active_user_liked={post.active_user_liked}
+            active_user_creator={post.active_user_creator}
+            onDelete={function (postId: number): Promise<void> {
+              throw new Error("Function not implemented.");
+            }}
+            user_id={""}
+          />
+        ))}
       </div>
       <div className="h-screen px-10">
         <form>

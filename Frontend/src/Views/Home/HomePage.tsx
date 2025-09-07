@@ -102,16 +102,16 @@ function HomePage({}: Props) {
 
   return (
     <div className="grid grid-cols-[1fr_clamp(0px,35vw,900px)] max-[1000px]:grid-cols-[1fr]">
-      <div className="h-screen border-x border-gray-200">
-        <div className="w-full h-15 border-b border-gray-200 flex items-center place-content-center gap-x-40">
+      <div className="h-screen ">
+        <div className="w-full h-15 border-b border-x border-gray-200 flex items-center place-content-center gap-x-40">
           <p className="text-gray-600 font-semibold">For you</p>
           <p className="text-gray-600 font-semibold">Following</p>
         </div>
         <form
           onSubmit={handleSubmit(onSubmit)}
-          className="w-full border-b border-gray-200 p-4"
+          className="w-full border-b border-gray-200 p-4 border-x"
         >
-          <div className="flex gap-x-2 ">
+          <div className="flex gap-x-2  ">
             <div className="w-12 h-11 rounded-4xl  border "></div>
             <textarea
               {...register("content")}

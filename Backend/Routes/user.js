@@ -142,4 +142,17 @@ userRouter.get("/post/replies/:id", async (req, res) => {
   }
 });
 
+userRouter.get("/profile/:userId/posts", async (req, res) => {
+  const activeUserId = req.session.userId;
+  const userId = req.params.userId;
+  try {
+    const posts =
+      await sql`select p.id, p.date_of_creation, p.content, u.name, u.t_identifier, u.id as user_id, count(l.id) AS likes, BOOL_OR(l.who_liked = ${activeUserId}) AS active_user_liked, BOOL_OR(p.created_by = ${activeUserId}) AS active_user_creator, p.reply_to from posts p left join profiles u on p.created_by = u.id left join likes l on p.id = l.post_id where p.reply_to IS NULL and p.created_by = ${userId} group by p.id, p.date_of_creation, p.content, u.name, u.t_identifier, u.id order by p.date_of_creation desc;`;
+    res.json(posts);
+  } catch (error) {
+    console.error("Error retrieving posts:", error);
+    res.status(500).json({ message: "Error retrieving posts" });
+  }
+});
+
 export default userRouter;
