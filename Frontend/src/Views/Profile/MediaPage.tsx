@@ -1,9 +1,17 @@
 import React from "react";
+import FallBack from "../../Lib/Assets/FallBack";
 
 type Props = {};
 
 function MediaPage({}: Props) {
-  return <div>MediaPage</div>;
+  return (
+    <>
+      <FallBack
+        content="When you post photos or videos, they will show up here."
+        title="Lights, camera … attachments!"
+      ></FallBack>
+    </>
+  );
 }
 
 export default MediaPage;

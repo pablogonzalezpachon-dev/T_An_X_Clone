@@ -8,9 +8,9 @@ import FallBack from "../../Lib/Assets/FallBack";
 
 type Props = {};
 
-function RepliesPage({}: Props) {
+function ProfilePostsPage({}: Props) {
   let { userId } = useParams();
-  const [profileReplies, setProfileReplies] = useState<Post[]>();
+  const [profilePosts, setProfilePosts] = useState<Post[]>();
   const [loading, setLoading] = useState(false);
   const [fallBack, setFallBack] = useState<ReactNode>();
 
@@ -18,14 +18,14 @@ function RepliesPage({}: Props) {
     setLoading(true);
     async function fetchData() {
       try {
-        const { data: profileReplies } = await axios.get<Post[]>(
-          `http://localhost:3000/user/profile/${userId}/replies`
+        const { data: profilePosts } = await axios.get<Post[]>(
+          `http://localhost:3000/user/profile/${userId}/posts`
         );
-        setProfileReplies(profileReplies);
+        setProfilePosts(profilePosts);
         setLoading(false);
-        if (!profileReplies.length) {
+        if (!profilePosts.length) {
           setFallBack(
-            <FallBack title="Looks that there is nothing here..." content="" />
+            <FallBack title="Still waiting for your first post..." content="" />
           );
         }
       } catch (e) {
@@ -33,6 +33,7 @@ function RepliesPage({}: Props) {
         console.log(e);
       }
     }
+
     fetchData();
   }, [userId]);
 
@@ -41,20 +42,20 @@ function RepliesPage({}: Props) {
       {loading ? (
         <LoadingSpinner style="w-7 h-7 text-gray-200 animate-spin fill-blue-400 mx-auto mt-20" />
       ) : (
-        profileReplies?.map((reply) => (
+        profilePosts?.map((post) => (
           <PostCard
-            id={reply.id}
-            content={reply.content}
-            date_of_creation={reply.date_of_creation}
-            name={reply.name}
-            t_identifier={reply.t_identifier}
-            likes={reply.likes}
-            active_user_liked={reply.active_user_liked}
-            active_user_creator={reply.active_user_creator}
+            id={post.id}
+            content={post.content}
+            date_of_creation={post.date_of_creation}
+            name={post.name}
+            t_identifier={post.t_identifier}
+            likes={post.likes}
+            active_user_liked={post.active_user_liked}
+            active_user_creator={post.active_user_creator}
             onDelete={function (postId: number): Promise<void> {
               throw new Error("Function not implemented.");
             }}
-            user_id={reply.user_id}
+            user_id={post.user_id}
           />
         ))
       )}
@@ -63,4 +64,4 @@ function RepliesPage({}: Props) {
   );
 }
 
-export default RepliesPage;
+export default ProfilePostsPage;

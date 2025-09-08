@@ -16,6 +16,7 @@ import RepliesPage from "./Views/Profile/RepliesPage.tsx";
 import LikesPage from "./Views/Profile/LikesPage.tsx";
 import PostPage from "./Views/Post/PostPage.tsx";
 import MediaPage from "./Views/Profile/MediaPage.tsx";
+import ProfilePostsPage from "./Views/Profile/ProfilePostsPage.tsx";
 
 axios.defaults.withCredentials = true;
 
@@ -33,6 +34,7 @@ createRoot(document.getElementById("root")!).render(
           <Route path="/nexus" element={<NexusPage />} />
 
           <Route path="/:userId" element={<ProfilePage />}>
+            <Route index element={<ProfilePostsPage />} />
             <Route path="with_replies" element={<RepliesPage />} />
             <Route path="media" element={<MediaPage />} />
             <Route path="likes" element={<LikesPage />} />
