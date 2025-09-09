@@ -19,6 +19,7 @@ export type UserProfile = {
   t_identifier: string;
   year_birth: string;
   created_at: string;
+  followed: boolean;
 };
 
 export type Post = {

@@ -23,9 +23,11 @@ userRouter.get("/session", async (req, res) => {
 });
 
 userRouter.get("/profile/:userId", async (req, res) => {
+  const activeUserId = req.session.userId;
   const userId = req.params.userId;
   try {
-    const user = await sql`SELECT * FROM profiles WHERE id = ${userId};`;
+    const user =
+      await sql`SELECT p.id, p.name, p.bio, p.location, p.month_birth, p.day_birth, p.year_birth, p.t_identifier, p.avatar, p.main_photo, p.created_at, BOOL_OR(f.following = ${activeUserId}) as followed FROM profiles p left join follows f on p.id = f.followed WHERE p.id = ${userId} group by p.id;`;
     res.json(user);
   } catch (error) {
     console.error("Error retrieving user profile:", error);
@@ -177,6 +179,38 @@ userRouter.get("/profile/posts/likes", async (req, res) => {
   } catch (error) {
     console.error("Error retrieving liked posts:", error);
     res.status(500).json({ message: "Error retrieving liked posts" });
+  }
+});
+
+userRouter.post("/follow", async (req, res) => {
+  const activeUserId = req.session.userId;
+  const followedUserId = req.body.userId;
+
+  try {
+    if (activeUserId === followedUserId) {
+      throw Error("You cannot follow yourself");
+    }
+    const followResponse =
+      await sql`INSERT INTO follows (followed, following) VALUES (${followedUserId}, ${activeUserId})`;
+    res.status(200).json({ message: "User followed successfully" });
+  } catch (e) {
+    onsole.error("Error following:", error);
+  }
+});
+
+userRouter.delete("/unfollow", async (req, res) => {
+  const activeUserId = req.session.userId;
+  const followedUserId = req.body.userId;
+
+  try {
+    if (activeUserId === followedUserId) {
+      throw Error("You cannot follow yourself");
+    }
+    const followResponse =
+      await sql`DELETE FROM follows where followed = ${followedUserId} AND following = ${activeUserId};`;
+    res.status(200).json({ message: "User unfollowed successfully" });
+  } catch (e) {
+    onsole.error("Error unfollowing:", error);
   }
 });
 

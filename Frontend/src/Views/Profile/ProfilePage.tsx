@@ -19,6 +19,7 @@ function ProfilePage({}: Props) {
   const [loading, setLoading] = useState(false);
   const [profileData, setProfileData] = useState<UserProfile | null>(null);
   const [activeUserId, setActiveUserId] = useState<string>();
+  const [followed, setFollowed] = useState<boolean>();
 
   useEffect(() => {
     setLoading(true);
@@ -31,6 +32,7 @@ function ProfilePage({}: Props) {
           user: { data: Auth; exp: number; iat: number };
         }>("http://localhost:3000/session");
         setActiveUserId(sessionResponse.user.data.user.id);
+        setFollowed(profileData[0].followed);
 
         console.log(profileData);
         setProfileData(profileData[0]);
@@ -42,6 +44,18 @@ function ProfilePage({}: Props) {
     }
     fetchData();
   }, [userId]);
+
+  async function handleFollow() {
+    try {
+      const { data: followResponse } = await axios.post<string>(
+        "http://localhost:3000/user/follow",
+        { userId }
+      );
+      console.log(followResponse);
+    } catch (e) {
+      console.log(e);
+    }
+  }
 
   return (
     <div className="grid grid-cols-[1fr_clamp(0px,35vw,900px)] max-[1000px]:grid-cols-[1fr]">
@@ -75,8 +89,15 @@ function ProfilePage({}: Props) {
               <button className="h-10 w-10 border border-gray-300 rounded-full mt-[-60px]">
                 <MdOutlineEmail className="m-auto" size={22} />
               </button>
-              <button className="border border-gray-300 bg-black text-white rounded-3xl w-25 text-md font-bold h-10 mr-3 mt-[-60px]">
-                Follow
+              <button
+                onClick={handleFollow}
+                className={` rounded-3xl w-25 text-md font-bold h-10 mr-3 mt-[-60px] ${
+                  followed
+                    ? "bg-white text-black border"
+                    : "bg-black text-white"
+                }`}
+              >
+                {followed ? "Following" : "Follow"}
               </button>
             </div>
           )}
