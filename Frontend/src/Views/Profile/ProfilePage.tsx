@@ -47,12 +47,26 @@ function ProfilePage({}: Props) {
 
   async function handleFollow() {
     try {
+      setFollowed(true);
       const { data: followResponse } = await axios.post<string>(
         "http://localhost:3000/user/follow",
         { userId }
       );
       console.log(followResponse);
     } catch (e) {
+      setFollowed(false);
+      console.log(e);
+    }
+  }
+
+  async function handleUnfollow() {
+    try {
+      setFollowed(false);
+      const { data: unfollowResponse } = await axios.delete<string>(
+        `http://localhost:3000/user/unfollow/${userId}`
+      );
+    } catch (e) {
+      setFollowed(true);
       console.log(e);
     }
   }
@@ -90,10 +104,10 @@ function ProfilePage({}: Props) {
                 <MdOutlineEmail className="m-auto" size={22} />
               </button>
               <button
-                onClick={handleFollow}
+                onClick={followed ? handleUnfollow : handleFollow}
                 className={` rounded-3xl w-25 text-md font-bold h-10 mr-3 mt-[-60px] ${
                   followed
-                    ? "bg-white text-black border"
+                    ? "bg-white text-black border border-gray-300"
                     : "bg-black text-white"
                 }`}
               >
@@ -115,8 +129,12 @@ function ProfilePage({}: Props) {
               </p>
             </div>
             <div className="flex gap-x-4 mt-2">
-              <p className="text-gray-600">0 following</p>
-              <p className="text-gray-600">0 followers</p>
+              <p className="text-gray-600">
+                {profileData && parseInt(profileData?.following)} following
+              </p>
+              <p className="text-gray-600">
+                {profileData && parseInt(profileData?.followers)} followers
+              </p>
             </div>
 
             <div className="w-full flex justify-evenly mt-8 mb-2">

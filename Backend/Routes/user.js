@@ -27,7 +27,7 @@ userRouter.get("/profile/:userId", async (req, res) => {
   const userId = req.params.userId;
   try {
     const user =
-      await sql`SELECT p.id, p.name, p.bio, p.location, p.month_birth, p.day_birth, p.year_birth, p.t_identifier, p.avatar, p.main_photo, p.created_at, BOOL_OR(f.following = ${activeUserId}) as followed FROM profiles p left join follows f on p.id = f.followed WHERE p.id = ${userId} group by p.id;`;
+      await sql`SELECT p.id, p.name, p.bio, p.location, p.month_birth, p.day_birth, p.year_birth, p.t_identifier, p.avatar, p.main_photo, p.created_at, BOOL_OR(f.following = ${activeUserId}) as followed, (SELECT COUNT(*) FROM follows f WHERE f.followed = p.id) AS followers, (SELECT COUNT(*) FROM follows f WHERE f.following = p.id) AS following FROM profiles p left join follows f on p.id = f.followed WHERE p.id = ${userId} group by p.id;`;
     res.json(user);
   } catch (error) {
     console.error("Error retrieving user profile:", error);
@@ -194,13 +194,13 @@ userRouter.post("/follow", async (req, res) => {
       await sql`INSERT INTO follows (followed, following) VALUES (${followedUserId}, ${activeUserId})`;
     res.status(200).json({ message: "User followed successfully" });
   } catch (e) {
-    onsole.error("Error following:", error);
+    console.error("Error following:", error);
   }
 });
 
-userRouter.delete("/unfollow", async (req, res) => {
+userRouter.delete("/unfollow/:followedUserId", async (req, res) => {
   const activeUserId = req.session.userId;
-  const followedUserId = req.body.userId;
+  const followedUserId = req.params.followedUserId;
 
   try {
     if (activeUserId === followedUserId) {
@@ -210,7 +210,7 @@ userRouter.delete("/unfollow", async (req, res) => {
       await sql`DELETE FROM follows where followed = ${followedUserId} AND following = ${activeUserId};`;
     res.status(200).json({ message: "User unfollowed successfully" });
   } catch (e) {
-    onsole.error("Error unfollowing:", error);
+    console.error("Error unfollowing:", error);
   }
 });
 

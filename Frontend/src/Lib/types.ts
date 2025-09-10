@@ -20,6 +20,8 @@ export type UserProfile = {
   year_birth: string;
   created_at: string;
   followed: boolean;
+  following: string;
+  followers: string;
 };
 
 export type Post = {
