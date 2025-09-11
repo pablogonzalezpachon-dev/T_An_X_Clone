@@ -22,6 +22,7 @@ export type UserProfile = {
   followed: boolean;
   following: string;
   followers: string;
+  posts: string;
 };
 
 export type Post = {
@@ -35,4 +36,5 @@ export type Post = {
   active_user_liked: boolean | null;
   active_user_creator: boolean | null;
   reply_to: number | null;
+  replies: string;
 };

@@ -20,6 +20,7 @@ function ProfilePage({}: Props) {
   const [profileData, setProfileData] = useState<UserProfile | null>(null);
   const [activeUserId, setActiveUserId] = useState<string>();
   const [followed, setFollowed] = useState<boolean>();
+  const [followers, setFollowers] = useState(0);
 
   useEffect(() => {
     setLoading(true);
@@ -33,7 +34,7 @@ function ProfilePage({}: Props) {
         }>("http://localhost:3000/session");
         setActiveUserId(sessionResponse.user.data.user.id);
         setFollowed(profileData[0].followed);
-
+        setFollowers(parseInt(profileData[0].followers));
         console.log(profileData);
         setProfileData(profileData[0]);
         setLoading(false);
@@ -46,7 +47,9 @@ function ProfilePage({}: Props) {
   }, [userId]);
 
   async function handleFollow() {
+    const previousfollowers = followers;
     try {
+      setFollowers((follower) => follower + 1);
       setFollowed(true);
       const { data: followResponse } = await axios.post<string>(
         "http://localhost:3000/user/follow",
@@ -54,18 +57,22 @@ function ProfilePage({}: Props) {
       );
       console.log(followResponse);
     } catch (e) {
+      setFollowers(previousfollowers);
       setFollowed(false);
       console.log(e);
     }
   }
 
   async function handleUnfollow() {
+    const previousfollowers = followers;
     try {
+      setFollowers((follower) => follower - 1);
       setFollowed(false);
       const { data: unfollowResponse } = await axios.delete<string>(
         `http://localhost:3000/user/unfollow/${userId}`
       );
     } catch (e) {
+      setFollowers(previousfollowers);
       setFollowed(true);
       console.log(e);
     }
@@ -84,7 +91,7 @@ function ProfilePage({}: Props) {
           />
           <div className="w-full h-15 items-center place-content-center gap-x-40">
             <p className="font-bold text-xl">{profileData?.name}</p>
-            <p className="text-gray-600">0 posts</p>
+            <p className="text-gray-600">{profileData?.posts} posts</p>
           </div>
         </div>
         <div className="w-full border-b border-gray-200">
@@ -132,9 +139,7 @@ function ProfilePage({}: Props) {
               <p className="text-gray-600">
                 {profileData && parseInt(profileData?.following)} following
               </p>
-              <p className="text-gray-600">
-                {profileData && parseInt(profileData?.followers)} followers
-              </p>
+              <p className="text-gray-600">{followers} followers</p>
             </div>
 
             <div className="w-full flex justify-evenly mt-8 mb-2">

@@ -103,6 +103,7 @@ function PostPage({}: Props) {
             active_user_creator: true,
             user_id: profileData[0].id,
             reply_to: parseInt(postId),
+            replies: "0",
           },
           ...originalReplies,
         ]);
@@ -128,6 +129,7 @@ function PostPage({}: Props) {
             active_user_creator: true,
             user_id: profileData[0].id,
             reply_to: parseInt(postId),
+            replies: "0",
           },
           ...originalReplies,
         ]);
@@ -313,6 +315,7 @@ function PostPage({}: Props) {
             active_user_creator={reply.active_user_creator}
             onDelete={handleDelete}
             user_id={reply.user_id}
+            replies={reply.replies}
           />
         ))}
         {repliesLoading && (

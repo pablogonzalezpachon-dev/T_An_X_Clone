@@ -56,6 +56,7 @@ function HomePage({}: Props) {
           active_user_creator: true,
           user_id: profileData[0].id,
           reply_to: null,
+          replies: "0",
         },
         ...originalPosts,
       ]);
@@ -154,6 +155,7 @@ function HomePage({}: Props) {
             active_user_creator={post.active_user_creator}
             onDelete={handleDelete}
             user_id={post.user_id}
+            replies={post.replies}
           />
         ))}
         {postsLoading && (

@@ -21,6 +21,7 @@ type Props = {
   active_user_creator: boolean | null;
   onDelete: (postId: number) => Promise<void>;
   user_id: string;
+  replies: string;
 };
 
 function PostCard({
@@ -34,6 +35,7 @@ function PostCard({
   active_user_creator,
   onDelete,
   user_id,
+  replies,
 }: Props) {
   const navigate = useNavigate();
   const [liked, setLiked] = useState<boolean | null>(active_user_liked);
@@ -125,7 +127,7 @@ function PostCard({
       <div className="h-5 w-full mt-5 flex justify-evenly">
         <div className="flex items-center gap-x-1 ">
           <FiMessageSquare color="gray" size={20} className="" />
-          <p className="text-gray-500">0</p>
+          <p className="text-gray-500">{replies}</p>
         </div>
 
         <div className="flex items-center gap-x-1 ">
