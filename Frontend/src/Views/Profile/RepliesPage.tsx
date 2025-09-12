@@ -55,6 +55,7 @@ function RepliesPage({}: Props) {
               throw new Error("Function not implemented.");
             }}
             user_id={reply.user_id}
+            replies={reply.replies}
           />
         ))
       )}

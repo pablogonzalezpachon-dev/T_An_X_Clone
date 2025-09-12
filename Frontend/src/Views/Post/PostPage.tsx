@@ -12,6 +12,7 @@ import { VscSettings } from "react-icons/vsc";
 import LoadingSpinner from "../../Lib/Assets/LoadingSpinner";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import PostCard from "../../Lib/Assets/PostCard";
+import ProgressBar from "../../Lib/Assets/ProgressBar";
 
 type Props = {};
 
@@ -29,16 +30,17 @@ type Inputs = {
 function PostPage({}: Props) {
   const navigate = useNavigate();
   const { postId } = useParams();
+  const postIdNum = postId && parseInt(postId);
   const [contentState, setContentState] = useState(false);
-  const [postData, setPostData] = useState<Post | undefined>();
-  const [liked, setLiked] = useState<boolean | null>();
-  const initialLikes = parseInt(postData?.likes as string) || 0;
-  const [numLikes, setnumLikes] = useState<number>(initialLikes);
+  const [postData, setPostData] = useState<Post>();
+  const [liked, setLiked] = useState<boolean>();
+  const [numLikes, setnumLikes] = useState<number>(0);
   const [replies, setReplies] = useState<Post[]>([]);
 
   const [postLoading, setPostLoading] = useState<boolean>(false);
   const [repliesLoading, setRepliesLoading] = useState<boolean>(false);
   const { register, handleSubmit, reset } = useForm<Inputs>({});
+  const [newReplyLoading, setNewReplyLoading] = useState(false);
 
   async function handleLike() {
     const originalNumLikes = numLikes;
@@ -53,7 +55,7 @@ function PostPage({}: Props) {
       );
       console.log(response);
     } catch (error) {
-      setLiked(null);
+      setLiked(false);
       setnumLikes(originalNumLikes);
       console.error("Error liking post:", error);
     }
@@ -61,7 +63,7 @@ function PostPage({}: Props) {
 
   async function handleUnlike() {
     const originalNumLikes = numLikes;
-    setLiked(null);
+    setLiked(false);
     setnumLikes((numLikes) => numLikes - 1);
     try {
       const response = await axios.post(
@@ -79,41 +81,22 @@ function PostPage({}: Props) {
   }
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
     const originalReplies = replies;
-    setContentState(false);
-    reset();
-    // optimistic UI
-
-    console.log(data);
-
     try {
+      setContentState(false);
+      setNewReplyLoading(true);
+      const textarea = document.getElementById(
+        "reply-textarea"
+      ) as HTMLTextAreaElement;
+      console.log(textarea);
       const { data: profileData } = await axios.get<UserProfile[]>(
         `http://localhost:3000/user/profile`
       );
-
-      postId &&
-        setReplies([
-          {
-            ...data,
-            id: Math.random(),
-            date_of_creation: new Date().toISOString(),
-            name: profileData[0].name,
-            t_identifier: profileData[0].t_identifier,
-            likes: "0",
-            active_user_liked: null,
-            active_user_creator: true,
-            user_id: profileData[0].id,
-            reply_to: parseInt(postId),
-            replies: "0",
-          },
-          ...originalReplies,
-        ]);
-      const postIdnum = postId && parseInt(postId);
 
       const { data: replyPostId } = await axios.post<number>(
         "http://localhost:3000/user/post",
         {
           ...data,
-          replyTo: postIdnum,
+          replyTo: postIdNum,
         }
       );
       postId &&
@@ -124,18 +107,23 @@ function PostPage({}: Props) {
             date_of_creation: new Date().toISOString(),
             name: profileData[0].name,
             t_identifier: profileData[0].t_identifier,
-            likes: "0",
-            active_user_liked: null,
+            likes: 0,
+            active_user_liked: false,
             active_user_creator: true,
             user_id: profileData[0].id,
             reply_to: parseInt(postId),
-            replies: "0",
+            replies: 0,
           },
-          ...originalReplies,
+          ...replies,
         ]);
+      reset();
+      autoGrow(textarea);
+      setNewReplyLoading(false);
     } catch (e) {
-      setReplies(replies.slice(1));
+      setContentState(true);
+      setReplies(originalReplies);
       console.error("Error creating post:", e);
+      setNewReplyLoading(false);
     }
   };
 
@@ -150,7 +138,7 @@ function PostPage({}: Props) {
         );
         console.log(postData);
         setPostData(postData);
-        setnumLikes(parseInt(postData.likes));
+        setnumLikes(postData.likes);
         setLiked(postData.active_user_liked);
 
         const { data: repliesData } = await axios.get<Post[]>(
@@ -238,7 +226,7 @@ function PostPage({}: Props) {
           <div className="h-5 w-full mt-5 flex justify-evenly border-y py-5 border-gray-200">
             <div className="flex items-center gap-x-1 ">
               <FiMessageSquare color="gray" size={20} className="" />
-              <p className="text-gray-500">0</p>
+              <p className="text-gray-500">{postData?.replies}</p>
             </div>
 
             <div className="flex items-center gap-x-1 ">
@@ -287,6 +275,7 @@ function PostPage({}: Props) {
                   setContentState(false);
                 }
               }}
+              id="reply-textarea"
               className="focus:outline-none overflow-visible resize-none w-full text-xl mt-1 ml-1"
               placeholder="Post your reply"
             ></textarea>
@@ -301,6 +290,7 @@ function PostPage({}: Props) {
               Reply
             </button>
           </div>
+          {newReplyLoading && <ProgressBar style={"w-full mt-5"} />}
         </form>
         {replies.map((reply) => (
           <PostCard

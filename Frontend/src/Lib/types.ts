@@ -20,9 +20,9 @@ export type UserProfile = {
   year_birth: string;
   created_at: string;
   followed: boolean;
-  following: string;
-  followers: string;
-  posts: string;
+  following: number;
+  followers: number;
+  posts: number;
 };
 
 export type Post = {
@@ -32,9 +32,9 @@ export type Post = {
   name: string;
   t_identifier: string;
   user_id: string;
-  likes: string;
-  active_user_liked: boolean | null;
-  active_user_creator: boolean | null;
+  likes: number;
+  active_user_liked: boolean;
+  active_user_creator: boolean;
   reply_to: number | null;
-  replies: string;
+  replies: number;
 };

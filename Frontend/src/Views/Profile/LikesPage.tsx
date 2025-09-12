@@ -20,6 +20,7 @@ function LikesPage({}: Props) {
         );
         setLoading(false);
         setProfileLikedPosts(likedPosts);
+        console.log(likedPosts);
       } catch (e) {
         setLoading(false);
         console.log(e);
@@ -47,6 +48,7 @@ function LikesPage({}: Props) {
               throw new Error("Function not implemented.");
             }}
             user_id={post.user_id}
+            replies={post.replies}
           />
         ))
       )}

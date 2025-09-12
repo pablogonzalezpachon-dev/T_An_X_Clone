@@ -56,6 +56,7 @@ function ProfilePostsPage({}: Props) {
               throw new Error("Function not implemented.");
             }}
             user_id={post.user_id}
+            replies={post.replies}
           />
         ))
       )}

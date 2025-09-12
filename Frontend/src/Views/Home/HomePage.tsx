@@ -24,16 +24,15 @@ function HomePage({}: Props) {
   const [newPostLoading, setNewPostLoading] = useState(false);
   const { register, handleSubmit, reset } = useForm<Inputs>({});
 
+  const textarea = document.getElementById(
+    "post-textarea"
+  ) as HTMLTextAreaElement;
+
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
     const originalPosts = posts;
-    setContentState(false);
-    setNewPostLoading(true);
-    reset();
-    // optimistic UI
-
-    console.log(data);
-
     try {
+      setContentState(false);
+      setNewPostLoading(true);
       const { data: profileData } = await axios.get<UserProfile[]>(
         `http://localhost:3000/user/profile`
       );
@@ -51,20 +50,22 @@ function HomePage({}: Props) {
           date_of_creation: new Date().toISOString(),
           name: profileData[0].name,
           t_identifier: profileData[0].t_identifier,
-          likes: "0",
-          active_user_liked: null,
+          likes: 0,
+          active_user_liked: false,
           active_user_creator: true,
           user_id: profileData[0].id,
           reply_to: null,
-          replies: "0",
+          replies: 0,
         },
         ...originalPosts,
       ]);
-
+      reset();
+      autoGrow(textarea);
       setNewPostLoading(false);
     } catch (e) {
-      setPosts(posts.slice(1));
+      setPosts(originalPosts);
       console.error("Error creating post:", e);
+      setContentState(true);
       setNewPostLoading(false);
     }
   };
@@ -113,8 +114,11 @@ function HomePage({}: Props) {
           className="w-full border-b border-gray-200 p-4 border-x"
         >
           <div className="flex gap-x-2  ">
-            <div className="w-12 h-11 rounded-4xl  border "></div>
+            <div className="w-12 h-11 rounded-4xl border "></div>
             <textarea
+              onClick={(e) => {
+                console.log(e.currentTarget.style.height);
+              }}
               {...register("content")}
               rows={1}
               onChange={(e) => {
@@ -126,7 +130,8 @@ function HomePage({}: Props) {
                   setContentState(false);
                 }
               }}
-              className="focus:outline-none overflow-visible resize-none w-full text-xl mt-1 ml-1"
+              className="post-textarea focus:outline-none overflow-visible resize-none w-full text-xl mt-1 ml-1"
+              id={"post-textarea"}
               placeholder="What's happening?"
             ></textarea>
           </div>

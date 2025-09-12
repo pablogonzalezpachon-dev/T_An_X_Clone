@@ -8,7 +8,7 @@ import { FaRegBookmark } from "react-icons/fa";
 import axios from "axios";
 import { useState } from "react";
 import { BsThreeDots } from "react-icons/bs";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 
 type Props = {
   id: number;
@@ -16,12 +16,12 @@ type Props = {
   date_of_creation: string;
   name: string;
   t_identifier: string;
-  likes: string;
-  active_user_liked: boolean | null;
-  active_user_creator: boolean | null;
+  likes: number;
+  active_user_liked: boolean;
+  active_user_creator: boolean;
   onDelete: (postId: number) => Promise<void>;
   user_id: string;
-  replies: string;
+  replies: number;
 };
 
 function PostCard({
@@ -37,9 +37,11 @@ function PostCard({
   user_id,
   replies,
 }: Props) {
+  const location = useLocation();
+
   const navigate = useNavigate();
-  const [liked, setLiked] = useState<boolean | null>(active_user_liked);
-  const [numlikes, setnumLikes] = useState<number>(parseInt(likes));
+  const [liked, setLiked] = useState(active_user_liked);
+  const [numlikes, setnumLikes] = useState(likes);
 
   async function handleLike() {
     const originalNumLikes = numlikes;
@@ -54,7 +56,7 @@ function PostCard({
       );
       console.log(response);
     } catch (error) {
-      setLiked(null);
+      setLiked(false);
       setnumLikes(originalNumLikes);
       console.error("Error liking post:", error);
     }
@@ -62,7 +64,7 @@ function PostCard({
 
   async function handleUnlike() {
     const originalNumLikes = numlikes;
-    setLiked(null);
+    setLiked(false);
     setnumLikes((numLikes) => numLikes - 1);
     try {
       const response = await axios.post(
@@ -93,7 +95,11 @@ function PostCard({
             className="font-semibold truncate hover:underline"
             onClick={(e) => {
               e.stopPropagation();
-              navigate(`/${user_id}`);
+              if (location.pathname !== `/${user_id}`) {
+                navigate(`/${user_id}`);
+              } else {
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }
             }}
           >
             {name}

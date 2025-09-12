@@ -174,7 +174,7 @@ userRouter.get("/profile/posts/likes", async (req, res) => {
   const activeUserId = req.session.userId;
   try {
     const likedPosts =
-      await sql`select p.id, p.date_of_creation, p.content, u.name, u.t_identifier, u.id as user_id, count(l.id) AS likes, COALESCE(BOOL_OR(l.who_liked = ${activeUserId}), false) AS active_user_liked, COALESCE(BOOL_OR(p.created_by = ${activeUserId}), false) AS active_user_creator, p.reply_to, (SELECT COUNT(*) FROM posts WHERE reply_to = p.id) AS replies from posts p left join profiles u on p.created_by = u.id left join likes l on p.id = l.post_id where l.who_liked = ${activeUserId} group by p.id, p.date_of_creation, p.content, u.name, u.t_identifier, u.id order by p.date_of_creation desc;`;
+      await sql`select p.id, p.date_of_creation, p.content, u.name, u.t_identifier, u.id as user_id, (SELECT COUNT(*) FROM likes l WHERE l.post_id = p.id) AS likes, COALESCE(BOOL_OR(l.who_liked = ${activeUserId}), false) AS active_user_liked, COALESCE(BOOL_OR(p.created_by = ${activeUserId}), false) AS active_user_creator, p.reply_to, (SELECT COUNT(*) FROM posts WHERE reply_to = p.id) AS replies from posts p left join profiles u on p.created_by = u.id left join likes l on p.id = l.post_id where l.who_liked = ${activeUserId} group by p.id, p.date_of_creation, p.content, u.name, u.t_identifier, u.id order by p.date_of_creation desc;`;
     res.json(likedPosts);
   } catch (error) {
     console.error("Error retrieving liked posts:", error);

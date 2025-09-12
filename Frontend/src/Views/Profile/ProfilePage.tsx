@@ -34,7 +34,7 @@ function ProfilePage({}: Props) {
         }>("http://localhost:3000/session");
         setActiveUserId(sessionResponse.user.data.user.id);
         setFollowed(profileData[0].followed);
-        setFollowers(parseInt(profileData[0].followers));
+        setFollowers(profileData[0].followers);
         console.log(profileData);
         setProfileData(profileData[0]);
         setLoading(false);
@@ -137,7 +137,7 @@ function ProfilePage({}: Props) {
             </div>
             <div className="flex gap-x-4 mt-2">
               <p className="text-gray-600">
-                {profileData && parseInt(profileData?.following)} following
+                {profileData?.following} following
               </p>
               <p className="text-gray-600">{followers} followers</p>
             </div>
