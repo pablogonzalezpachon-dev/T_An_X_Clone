@@ -1,8 +1,12 @@
 import { createContext, useState, type ReactNode } from "react";
 
 type Auth = {
-  tIdentifier: string;
-  setTIdentifier: (id: string) => void;
+  followed: boolean;
+  setFollowed: React.Dispatch<React.SetStateAction<boolean>>;
+  followers: number;
+  setFollowers: React.Dispatch<React.SetStateAction<number>>;
+  following: number;
+  setFollowing: React.Dispatch<React.SetStateAction<number>>;
 };
 export const AuthContext = createContext({} as Auth);
 
@@ -11,10 +15,21 @@ type Props = {
 };
 
 export default function AuthProvider({ children }: Props) {
-  const [tIdentifier, setTIdentifier] = useState("");
+  const [followed, setFollowed] = useState<boolean>(false);
+  const [followers, setFollowers] = useState<number>(0);
+  const [following, setFollowing] = useState<number>(0);
 
   return (
-    <AuthContext.Provider value={{ tIdentifier, setTIdentifier }}>
+    <AuthContext.Provider
+      value={{
+        followed,
+        setFollowed,
+        followers,
+        setFollowers,
+        following,
+        setFollowing,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

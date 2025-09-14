@@ -56,6 +56,7 @@ function HomePage({}: Props) {
           user_id: profileData[0].id,
           reply_to: null,
           replies: 0,
+          followed: false,
         },
         ...originalPosts,
       ]);
@@ -161,6 +162,7 @@ function HomePage({}: Props) {
             onDelete={handleDelete}
             user_id={post.user_id}
             replies={post.replies}
+            followed={post.followed}
           />
         ))}
         {postsLoading && (

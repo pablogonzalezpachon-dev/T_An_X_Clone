@@ -37,4 +37,5 @@ export type Post = {
   active_user_creator: boolean;
   reply_to: number | null;
   replies: number;
+  followed: boolean;
 };

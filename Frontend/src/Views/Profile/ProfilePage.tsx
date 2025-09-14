@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useContext, useEffect, useState } from "react";
 import { IoSearchOutline } from "react-icons/io5";
 import { IoIosArrowRoundBack } from "react-icons/io";
 import { FaRegCalendarAlt } from "react-icons/fa";
@@ -10,6 +10,7 @@ import LoadingSpinner from "../../Lib/Assets/LoadingSpinner";
 import { useParams } from "react-router";
 import { MdOutlineEmail } from "react-icons/md";
 import PostCard from "../../Lib/Assets/PostCard";
+import { AuthContext } from "../../Lib/Contexts/AuthContext";
 
 type Props = {};
 
@@ -19,8 +20,8 @@ function ProfilePage({}: Props) {
   const [loading, setLoading] = useState(false);
   const [profileData, setProfileData] = useState<UserProfile | null>(null);
   const [activeUserId, setActiveUserId] = useState<string>();
-  const [followed, setFollowed] = useState<boolean>();
-  const [followers, setFollowers] = useState(0);
+  const { followers, setFollowers, followed, setFollowed } =
+    useContext(AuthContext);
 
   useEffect(() => {
     setLoading(true);

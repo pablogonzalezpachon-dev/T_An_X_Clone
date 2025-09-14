@@ -11,6 +11,22 @@ function LikesPage({}: Props) {
   const [profileLikedPosts, setProfileLikedPosts] = useState<Post[]>();
   const [loading, setLoading] = useState(false);
 
+  const handleDelete = async (postId: number) => {
+    const originalPosts = profileLikedPosts;
+    try {
+      setProfileLikedPosts((prevPosts) =>
+        prevPosts?.filter((post) => post.id !== postId)
+      );
+      const response = await axios.delete(
+        `http://localhost:3000/user/post/${postId}`
+      );
+      console.log(response);
+    } catch (error) {
+      setProfileLikedPosts(originalPosts);
+      console.error("Error deleting post:", error);
+    }
+  };
+
   useEffect(() => {
     setLoading(true);
     async function fetchData() {
@@ -44,11 +60,10 @@ function LikesPage({}: Props) {
             likes={post.likes}
             active_user_liked={post.active_user_liked}
             active_user_creator={post.active_user_creator}
-            onDelete={function (postId: number): Promise<void> {
-              throw new Error("Function not implemented.");
-            }}
+            onDelete={handleDelete}
             user_id={post.user_id}
             replies={post.replies}
+            followed={post.followed}
           />
         ))
       )}

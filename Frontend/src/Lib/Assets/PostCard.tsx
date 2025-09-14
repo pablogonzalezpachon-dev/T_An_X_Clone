@@ -6,9 +6,23 @@ import { FaRegHeart } from "react-icons/fa";
 import { FaEye } from "react-icons/fa";
 import { FaRegBookmark } from "react-icons/fa";
 import axios from "axios";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { BsThreeDots } from "react-icons/bs";
 import { useLocation, useNavigate } from "react-router";
+import { FiTrash2 } from "react-icons/fi";
+import {
+  Dialog,
+  DialogBackdrop,
+  DialogPanel,
+  DialogTitle,
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuItems,
+  Transition,
+} from "@headlessui/react";
+import DropDownButton from "./DropDownButton";
+import { AuthContext } from "../Contexts/AuthContext";
 
 type Props = {
   id: number;
@@ -22,6 +36,7 @@ type Props = {
   onDelete: (postId: number) => Promise<void>;
   user_id: string;
   replies: number;
+  followed: boolean;
 };
 
 function PostCard({
@@ -36,10 +51,12 @@ function PostCard({
   onDelete,
   user_id,
   replies,
+  followed,
 }: Props) {
   const location = useLocation();
-
   const navigate = useNavigate();
+
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [liked, setLiked] = useState(active_user_liked);
   const [numlikes, setnumLikes] = useState(likes);
 
@@ -81,10 +98,23 @@ function PostCard({
     }
   }
 
+  async function handleFollow() {
+    try {
+      const { data: followResponse } = await axios.post<string>(
+        "http://localhost:3000/user/follow",
+        { user_id }
+      );
+      console.log(followResponse);
+    } catch (e) {
+      console.log(e);
+    }
+  }
+
   return (
     <div
       className="w-full border-b border-x border-gray-200 p-4 cursor-pointer"
       onClick={() => {
+        if (dialogOpen) return;
         navigate("/" + user_id + "/status/" + id);
       }}
     >
@@ -113,18 +143,17 @@ function PostCard({
           </p>
         </div>
         <div>
-          {active_user_creator ? (
-            <BsThreeDots
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete(id);
-              }}
-              size={20}
-              className="mt-1"
-            />
-          ) : (
-            <SlUserFollow size={20} className="mt-1" />
-          )}
+          <DropDownButton
+            dialogOpen={dialogOpen}
+            setDialogOpen={setDialogOpen}
+            active_user_creator={active_user_creator}
+            onDelete={() => {
+              onDelete(id);
+            }}
+            t_identifier={t_identifier}
+            followed={followed}
+            user_id={user_id}
+          />
         </div>
       </div>
       <div className="px-13 mt-[-30px]">

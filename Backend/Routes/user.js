@@ -64,7 +64,7 @@ userRouter.get("/posts", async (req, res) => {
   const userId = req.session.userId;
   try {
     const posts =
-      await sql`select p.id, p.date_of_creation, p.content, u.name, u.t_identifier, u.id as user_id, count(l.id) AS likes, COALESCE(BOOL_OR(l.who_liked = ${userId}), false) AS active_user_liked, COALESCE(BOOL_OR(p.created_by = ${userId}), false) AS active_user_creator, p.reply_to, (SELECT COUNT(*) FROM posts WHERE reply_to = p.id) AS replies from posts p left join profiles u on p.created_by = u.id left join likes l on p.id = l.post_id where p.reply_to IS NULL group by p.id, p.date_of_creation, p.content, u.name, u.t_identifier, u.id order by p.date_of_creation desc;`;
+      await sql`select p.id, p.date_of_creation, p.content, u.name, u.t_identifier, u.id as user_id, count(l.id) AS likes, COALESCE(BOOL_OR(l.who_liked = ${userId}), false) AS active_user_liked, COALESCE(BOOL_OR(p.created_by = ${userId}), false) AS active_user_creator, p.reply_to, (SELECT COUNT(*) FROM posts WHERE reply_to = p.id) AS replies, COALESCE(BOOL_OR(f.following = ${userId}), false) as followed from posts p left join profiles u on p.created_by = u.id left join likes l on p.id = l.post_id left join follows f on p.created_by = f.followed where p.reply_to IS NULL group by p.id, p.date_of_creation, p.content, u.name, u.t_identifier, u.id order by p.date_of_creation desc;`;
     res.json(posts);
   } catch (error) {
     console.error("Error retrieving posts:", error);
@@ -184,7 +184,9 @@ userRouter.get("/profile/posts/likes", async (req, res) => {
 
 userRouter.post("/follow", async (req, res) => {
   const activeUserId = req.session.userId;
+  console.log(activeUserId);
   const followedUserId = req.body.userId;
+  console.log(followedUserId);
 
   try {
     if (activeUserId === followedUserId) {
@@ -194,7 +196,8 @@ userRouter.post("/follow", async (req, res) => {
       await sql`INSERT INTO follows (followed, following) VALUES (${followedUserId}, ${activeUserId})`;
     res.status(200).json({ message: "User followed successfully" });
   } catch (e) {
-    console.error("Error following:", error);
+    console.log(e);
+    res.status(500).json("Error following", e);
   }
 });
 
@@ -210,7 +213,8 @@ userRouter.delete("/unfollow/:followedUserId", async (req, res) => {
       await sql`DELETE FROM follows where followed = ${followedUserId} AND following = ${activeUserId};`;
     res.status(200).json({ message: "User unfollowed successfully" });
   } catch (e) {
-    console.error("Error unfollowing:", error);
+    console.log(e);
+    res.status(500).json("Err");
   }
 });
 

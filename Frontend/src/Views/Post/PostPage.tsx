@@ -113,6 +113,7 @@ function PostPage({}: Props) {
             user_id: profileData[0].id,
             reply_to: parseInt(postId),
             replies: 0,
+            followed: false,
           },
           ...replies,
         ]);
@@ -189,7 +190,6 @@ function PostPage({}: Props) {
             <button className="border-1 border-gray-500 rounded-3xl text-md w-23 font-bold h-8">
               Reply
             </button>
-            <VscSettings size={30} />
           </div>
         </div>
         <div className="w-full border-b border-gray-200 p-4">
@@ -200,7 +200,14 @@ function PostPage({}: Props) {
             <div className="flex gap-x-2">
               <div className="w-11 h-11 rounded-full bg-black"></div>
               <div className="flex flex-col">
-                <p className="font-semibold truncate ">{postData?.name}</p>
+                <p
+                  className="font-semibold truncate hover:underline"
+                  onClick={() => {
+                    navigate(`/${postData?.user_id}`);
+                  }}
+                >
+                  {postData?.name}
+                </p>
                 <p className="text-gray-500 mt-[-5px]">
                   {postData?.t_identifier}
                 </p>
@@ -306,6 +313,7 @@ function PostPage({}: Props) {
             onDelete={handleDelete}
             user_id={reply.user_id}
             replies={reply.replies}
+            followed={reply.followed}
           />
         ))}
         {repliesLoading && (

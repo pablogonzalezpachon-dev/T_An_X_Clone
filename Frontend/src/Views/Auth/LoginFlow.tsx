@@ -39,9 +39,9 @@ export default function LoginFlow({}: Props) {
   const [formError, setFormError] = useState<string | null>(null);
 
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
+    console.log(data);
     setFormError(null);
     setLoading(true);
-    console.log(data);
 
     try {
       const response = await axios.post(
@@ -70,6 +70,7 @@ export default function LoginFlow({}: Props) {
           setOpen(true);
         }}
         className="border-1 border-gray-500 rounded-3xl text-lg w-80 font-bold h-10"
+        type="button"
       >
         Login
       </button>
@@ -121,7 +122,6 @@ export default function LoginFlow({}: Props) {
                         })}
                         className="border w-full border-gray-300 h-15 text-lg pl-2 rounded-lg"
                         placeholder="Email"
-                        onChange={(e) => {}}
                       ></input>
 
                       {errors.email && (
@@ -136,7 +136,6 @@ export default function LoginFlow({}: Props) {
                         type="password"
                         className="border w-full border-gray-300 h-15 text-lg pl-2 rounded-lg"
                         placeholder="Password"
-                        onChange={(e) => {}}
                       ></input>
 
                       {errors.password && (
@@ -148,6 +147,7 @@ export default function LoginFlow({}: Props) {
                       <div className="flex gap-x-3"></div>
 
                       <button
+                        id="login-button"
                         type="submit"
                         className="disabled:opacity-50 h-13 w-full justify-center rounded-3xl bg-black px-3 py-2 text-lg font-bold text-white"
                       >
