@@ -13,6 +13,7 @@ authRouter.post("/signup", async (req, res) => {
   const dayOfBirth = req.body.dayOfBirth;
   const yearOfBirth = req.body.yearOfBirth;
   const password = req.body.password;
+  const avatarFile = req.body.avatarFile;
 
   try {
     const { data, error } = await supabase.auth.admin.createUser({
@@ -24,6 +25,7 @@ authRouter.post("/signup", async (req, res) => {
     if (error) {
       throw error;
     }
+
     if (data) {
       const profileUser = await sql`
         INSERT INTO profiles 
@@ -36,7 +38,8 @@ authRouter.post("/signup", async (req, res) => {
       )}, ${data.user.created_at});
       `;
     }
-    res.json({ message: `${data.user} succesfully signed up` });
+
+    res.json(data);
   } catch (e) {
     console.log(e);
     res.status(403).json({ message: `${e}` });

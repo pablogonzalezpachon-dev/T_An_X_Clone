@@ -37,6 +37,7 @@ function ProfilePostsPage({}: Props) {
         const { data: profilePosts } = await axios.get<Post[]>(
           `http://localhost:3000/user/profile/${userId}/posts`
         );
+        console.log(profilePosts);
         setProfilePosts(profilePosts);
         setLoading(false);
         if (!profilePosts.length) {
@@ -60,6 +61,7 @@ function ProfilePostsPage({}: Props) {
       ) : (
         profilePosts?.map((post) => (
           <PostCard
+            key={post.id}
             id={post.id}
             content={post.content}
             date_of_creation={post.date_of_creation}

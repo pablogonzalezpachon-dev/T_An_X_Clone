@@ -7,6 +7,8 @@ type Auth = {
   setFollowers: React.Dispatch<React.SetStateAction<number>>;
   following: number;
   setFollowing: React.Dispatch<React.SetStateAction<number>>;
+  followState: boolean;
+  setFollowState: React.Dispatch<React.SetStateAction<boolean>>;
 };
 export const AuthContext = createContext({} as Auth);
 
@@ -15,9 +17,10 @@ type Props = {
 };
 
 export default function AuthProvider({ children }: Props) {
-  const [followed, setFollowed] = useState<boolean>(false);
-  const [followers, setFollowers] = useState<number>(0);
-  const [following, setFollowing] = useState<number>(0);
+  const [followed, setFollowed] = useState(false);
+  const [followers, setFollowers] = useState(0);
+  const [following, setFollowing] = useState(0);
+  const [followState, setFollowState] = useState(false);
 
   return (
     <AuthContext.Provider
@@ -28,6 +31,8 @@ export default function AuthProvider({ children }: Props) {
         setFollowers,
         following,
         setFollowing,
+        followState,
+        setFollowState,
       }}
     >
       {children}

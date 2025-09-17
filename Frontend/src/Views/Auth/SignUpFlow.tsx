@@ -17,6 +17,16 @@ import {
 } from "../../Lib/functions";
 import { useNavigate } from "react-router";
 import LoadingSpinner from "../../Lib/Assets/LoadingSpinner";
+import AvatarUploader from "./AvatarUploader";
+
+console.log("VITE_SUPABASE_URL present?", !!import.meta.env.VITE_SUPABASE_URL);
+console.log(
+  "VITE_SUPABASE_ANON_KEY present?",
+  !!import.meta.env.VITE_SUPABASE_ANON_KEY
+);
+
+import type { User } from "@supabase/auth-js";
+import supabase from "../../Lib/database";
 
 const months = [
   "January",
@@ -40,6 +50,7 @@ type Inputs = {
   dayOfBirth: number;
   yearOfBirth: number;
   password: string;
+  avatarFile: File | null;
 };
 
 export default function SignUpFlow() {
@@ -120,6 +131,7 @@ export default function SignUpFlow() {
     setPasswordState(false);
     setPasswordError(undefined);
     setFile(null);
+    setFormError(undefined);
   }
 
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
@@ -128,18 +140,33 @@ export default function SignUpFlow() {
     console.log(data);
 
     try {
-      const signUpResponse = await axios.post(
+      const { data: signUpResponse } = await axios.post<{ user: User }>(
         "http://localhost:3000/auth/signup",
         data
       );
-      console.log(signUpResponse);
+      const path = `/avatars/${signUpResponse.user.id}/${file?.name}`;
+
+      if (file) {
+        const { data: storageResponse, error: storageError } =
+          await supabase.storage.from("avatars").upload(path, file);
+        if (storageError) {
+          throw storageError;
+        }
+        console.log(storageResponse);
+      }
 
       const loginResponse = await axios.post(
         "http://localhost:3000/auth/login",
         { email: data.email, password: data.password }
       );
-
       console.log("loginRespose:", loginResponse);
+
+      const { data: uploadResponse } = await axios.post<string>(
+        "http://localhost:3000/user/avatar",
+        { path }
+      );
+      console.log(uploadResponse);
+
       navigate("/home");
       setLoading(false);
     } catch (e) {
@@ -385,14 +412,17 @@ export default function SignUpFlow() {
 
                       <button
                         disabled={!passwordState}
-                        type="submit"
+                        type="button"
+                        onClick={() => {
+                          setPage(3);
+                        }}
                         className="disabled:opacity-50 mt-80 mb-5 h-13 w-full justify-center rounded-3xl bg-black px-3 py-2 text-lg font-bold text-white"
                       >
-                        Create account
+                        Continue
                       </button>
                     </div>
 
-                    {/* <div
+                    <div
                       className={`mt-10 flex flex-col gap-y-8 ${
                         page !== 3 ? "hidden" : ""
                       }`}
@@ -403,16 +433,12 @@ export default function SignUpFlow() {
                       <AvatarUploader onChange={setFile} />
 
                       <button
-                        disabled={!passwordState}
-                        type="button"
-                        onClick={() => {
-                          setPage(3);
-                        }}
-                        className="disabled:opacity-50 mt-80 mb-5 h-13 w-full justify-center rounded-3xl bg-black px-3 py-2 text-lg font-bold text-white"
+                        type="submit"
+                        className="disabled:opacity-50 mt-50 mb-5 h-13 w-full justify-center rounded-3xl bg-black px-3 py-2 text-lg font-bold text-white"
                       >
-                        Continue
+                        Create Account
                       </button>
-                    </div> */}
+                    </div>
                   </form>
                 </div>
               </div>

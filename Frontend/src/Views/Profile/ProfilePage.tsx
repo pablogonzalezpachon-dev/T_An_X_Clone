@@ -20,7 +20,7 @@ function ProfilePage({}: Props) {
   const [loading, setLoading] = useState(false);
   const [profileData, setProfileData] = useState<UserProfile | null>(null);
   const [activeUserId, setActiveUserId] = useState<string>();
-  const { followers, setFollowers, followed, setFollowed } =
+  const { followers, setFollowers, followed, setFollowed, setFollowState } =
     useContext(AuthContext);
 
   useEffect(() => {
@@ -52,6 +52,7 @@ function ProfilePage({}: Props) {
     try {
       setFollowers((follower) => follower + 1);
       setFollowed(true);
+      setFollowState((state) => !state);
       const { data: followResponse } = await axios.post<string>(
         "http://localhost:3000/user/follow",
         { userId }
@@ -69,6 +70,7 @@ function ProfilePage({}: Props) {
     try {
       setFollowers((follower) => follower - 1);
       setFollowed(false);
+      setFollowState((state) => !state);
       const { data: unfollowResponse } = await axios.delete<string>(
         `http://localhost:3000/user/unfollow/${userId}`
       );

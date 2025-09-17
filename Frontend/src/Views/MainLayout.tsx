@@ -9,12 +9,18 @@ import { IoSettingsOutline } from "react-icons/io5";
 import { BiPencil } from "react-icons/bi";
 import axios from "axios";
 import { useEffect, useState } from "react";
-import type { Auth } from "../Lib/types";
+import type { Auth, UserProfile } from "../Lib/types";
+import supabase from "../Lib/database";
+import { BsThreeDots } from "react-icons/bs";
+import SignOutButton from "../Lib/Assets/SignOutButton";
 
 type Props = {};
 
 function MainLayout({}: Props) {
   const [id, setId] = useState("");
+  const [profileData, setProfileData] = useState<UserProfile>();
+  const [avatar, setAvatar] = useState<string>();
+
   const navigate = useNavigate();
   useEffect(() => {
     const verifyAuth = async () => {
@@ -24,6 +30,23 @@ function MainLayout({}: Props) {
         }>("http://localhost:3000/session");
         const userId = sessionResponse.user.data.user.id;
         setId(userId);
+
+        const { data: profileData } = await axios.get<UserProfile[]>(
+          `http://localhost:3000/user/profile/${userId}`
+        );
+        console.log(profileData);
+        setProfileData(profileData[0]);
+
+        const { data: avatarFetch } = await supabase.storage
+          .from("avatars")
+          .getPublicUrl(profileData[0].avatar);
+        console.log(avatarFetch.publicUrl);
+
+        setAvatar(avatarFetch.publicUrl);
+
+        const { data: buckets, error } = await supabase.storage.listBuckets();
+        console.log(buckets); // look for { name: 'avatars', public: true/false }
+        console.log(error);
       } catch (e) {
         console.log(e);
         navigate("/");
@@ -115,23 +138,14 @@ function MainLayout({}: Props) {
               className="hidden max-[1300px]:block max-[1300px]:mx-auto"
             />
           </button>
-          <button
-            onClick={async () => {
-              try {
-                const response = await axios.post(
-                  "http://localhost:3000/auth/logout",
-                  {},
-                  { withCredentials: true }
-                );
-                console.log(response);
-                navigate("/");
-              } catch (e) {
-                console.log(e);
-              }
-            }}
-          >
-            Logout
-          </button>
+
+          {profileData && avatar && (
+            <SignOutButton
+              name={profileData.name}
+              t_identifier={profileData.t_identifier}
+              avatar={avatar}
+            />
+          )}
         </div>
       </div>
 

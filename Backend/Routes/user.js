@@ -22,6 +22,21 @@ userRouter.get("/session", async (req, res) => {
   }
 });
 
+userRouter.post("/avatar", async (req, res) => {
+  const activeUserId = req.session.userId;
+  const path = req.body.path;
+
+  try {
+    const avatarUpload = await sql`
+    update profiles set avatar = ${path} where id = ${activeUserId}
+    `;
+    res.status(200).json("Image uploaded correctly");
+  } catch (e) {
+    console.log("Error uploading the avatar", e);
+    res.status(500).json({ message: "Error uploading the avatar" });
+  }
+});
+
 userRouter.get("/profile/:userId", async (req, res) => {
   const activeUserId = req.session.userId;
   const userId = req.params.userId;
@@ -149,7 +164,7 @@ userRouter.get("/profile/:userId/posts", async (req, res) => {
   const profileUserId = req.params.userId;
   try {
     const posts =
-      await sql`select p.id, p.date_of_creation, p.content, u.name, u.t_identifier, u.id as user_id, count(l.id) AS likes, COALESCE(BOOL_OR(l.who_liked = ${activeUserId}), false) AS active_user_liked, COALESCE(BOOL_OR(p.created_by = ${activeUserId}), false) AS active_user_creator, p.reply_to, (SELECT COUNT(*) FROM posts WHERE reply_to = p.id) AS replies from posts p left join profiles u on p.created_by = u.id left join likes l on p.id = l.post_id where p.reply_to IS NULL and p.created_by = ${profileUserId} group by p.id, p.date_of_creation, p.content, u.name, u.t_identifier, u.id order by p.date_of_creation desc;`;
+      await sql`select p.id, p.date_of_creation, p.content, u.name, u.t_identifier, u.id as user_id, count(l.id) AS likes, COALESCE(BOOL_OR(l.who_liked = ${activeUserId}), false) AS active_user_liked, COALESCE(BOOL_OR(p.created_by = ${activeUserId}), false) AS active_user_creator, p.reply_to, (SELECT COUNT(*) FROM posts WHERE reply_to = p.id) AS replies, COALESCE(BOOL_OR(f.following = ${activeUserId}), false) as followed from posts p left join profiles u on p.created_by = u.id left join likes l on p.id = l.post_id left join follows f on p.created_by = f.followed where p.reply_to IS NULL and p.created_by = ${profileUserId} group by p.id, p.date_of_creation, p.content, u.name, u.t_identifier, u.id order by p.date_of_creation desc;`;
     res.json(posts);
   } catch (error) {
     console.error("Error retrieving posts:", error);
@@ -162,7 +177,7 @@ userRouter.get("/profile/:userId/replies", async (req, res) => {
   const profileUserId = req.params.userId;
   try {
     const replies =
-      await sql`select p.id, p.date_of_creation, p.content, u.name, u.t_identifier, u.id as user_id, count(l.id) AS likes, COALESCE(BOOL_OR(l.who_liked = ${activeUserId}), false) AS active_user_liked, COALESCE(BOOL_OR(p.created_by = ${activeUserId}), false) AS active_user_creator, p.reply_to, (SELECT COUNT(*) FROM posts WHERE reply_to = p.id) AS replies from posts p left join profiles u on p.created_by = u.id left join likes l on p.id = l.post_id where p.reply_to IS NOT NULL and p.created_by = ${profileUserId} group by p.id, p.date_of_creation, p.content, u.name, u.t_identifier, u.id order by p.date_of_creation desc;`;
+      await sql`select p.id, p.date_of_creation, p.content, u.name, u.t_identifier, u.id as user_id, count(l.id) AS likes, COALESCE(BOOL_OR(l.who_liked = ${activeUserId}), false) AS active_user_liked, COALESCE(BOOL_OR(p.created_by = ${activeUserId}), false) AS active_user_creator, p.reply_to, (SELECT COUNT(*) FROM posts WHERE reply_to = p.id) AS replies, COALESCE(BOOL_OR(f.following = ${activeUserId}), false) as followed from posts p left join profiles u on p.created_by = u.id left join likes l on p.id = l.post_id left join follows f on p.created_by = f.followed where p.reply_to IS NOT NULL and p.created_by = ${profileUserId} group by p.id, p.date_of_creation, p.content, u.name, u.t_identifier, u.id order by p.date_of_creation desc;`;
     res.json(replies);
   } catch (error) {
     console.error("Error retrieving replies:", error);

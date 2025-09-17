@@ -1,4 +1,7 @@
 import { useEffect, useRef, useState } from "react";
+import type { UseFormRegister } from "react-hook-form";
+
+// BLOB: Binary Large Object
 
 type Props = {
   size?: number;
@@ -59,7 +62,6 @@ export default function AvatarUploader({
 
   return (
     <div className="flex flex-col items-center gap-3">
-      {/* Botón principal (clic o Enter/Espacio) */}
       <button
         type="button"
         onClick={openFileDialog}
@@ -72,10 +74,12 @@ export default function AvatarUploader({
           type="file"
           accept="image/*"
           className="sr-only"
-          onChange={(e) => handleFile(e.target.files?.[0])}
+          onChange={(e) => {
+            handleFile(e.target.files?.[0]);
+          }}
+          onClick={() => {}}
         />
 
-        {/* Círculo de avatar */}
         <div className="w-full h-full rounded-full bg-gray-300 overflow-hidden ring-1 ring-black/10">
           {previewUrl ? (
             <img
@@ -85,7 +89,6 @@ export default function AvatarUploader({
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              {/* Silueta placeholder */}
               <svg
                 viewBox="0 0 24 24"
                 className="w-12 h-12 text-gray-500"
