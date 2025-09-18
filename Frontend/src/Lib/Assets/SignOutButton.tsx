@@ -56,7 +56,6 @@ function SignOutButton({ name, t_identifier, avatar }: Props) {
             aria-label="Post actions"
           >
             <img
-              fetchPriority="high"
               className="ml-3 h-12 w-12 rounded-full max-[1300px]:mx-auto object-cover"
               src={avatar}
             />

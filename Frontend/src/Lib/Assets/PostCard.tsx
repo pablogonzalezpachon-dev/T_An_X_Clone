@@ -23,6 +23,7 @@ import {
 } from "@headlessui/react";
 import DropDownButton from "./DropDownButton";
 import { AuthContext } from "../Contexts/AuthContext";
+import { BsPersonFill } from "react-icons/bs";
 
 type Props = {
   id: number;
@@ -37,6 +38,7 @@ type Props = {
   user_id: string;
   replies: number;
   followed: boolean;
+  avatar: string | null;
 };
 
 function PostCard({
@@ -52,6 +54,7 @@ function PostCard({
   user_id,
   replies,
   followed,
+  avatar,
 }: Props) {
   const location = useLocation();
   const navigate = useNavigate();
@@ -120,7 +123,16 @@ function PostCard({
     >
       <div className="w-full flex h-15 justify-between">
         <div className="flex gap-x-2">
-          <div className="w-11 h-11 rounded-full bg-black"></div>
+          {avatar ? (
+            <img
+              src={avatar}
+              className="w-11 h-11 rounded-full bg-black object-cover"
+            />
+          ) : (
+            <div className="w-11 h-11 flex items-center justify-center bg-gray-100 rounded-full overflow-hidden">
+              <BsPersonFill />
+            </div>
+          )}
           <p
             className="font-semibold truncate hover:underline"
             onClick={(e) => {

@@ -64,6 +64,7 @@ function LikesPage({}: Props) {
             user_id={post.user_id}
             replies={post.replies}
             followed={post.followed}
+            avatar={post.avatar}
           />
         ))
       )}

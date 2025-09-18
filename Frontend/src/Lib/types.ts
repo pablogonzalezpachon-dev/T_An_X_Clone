@@ -38,4 +38,5 @@ export type Post = {
   reply_to: number | null;
   replies: number;
   followed: boolean;
+  avatar: string | null;
 };

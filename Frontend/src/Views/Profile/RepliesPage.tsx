@@ -71,6 +71,7 @@ function RepliesPage({}: Props) {
             user_id={reply.user_id}
             replies={reply.replies}
             followed={reply.followed}
+            avatar={reply.avatar}
           />
         ))
       )}

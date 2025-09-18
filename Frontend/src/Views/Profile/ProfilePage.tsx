@@ -11,6 +11,7 @@ import { useParams } from "react-router";
 import { MdOutlineEmail } from "react-icons/md";
 import PostCard from "../../Lib/Assets/PostCard";
 import { AuthContext } from "../../Lib/Contexts/AuthContext";
+import { BsPersonFill } from "react-icons/bs";
 
 type Props = {};
 
@@ -99,7 +100,16 @@ function ProfilePage({}: Props) {
         </div>
         <div className="w-full border-b border-gray-200">
           <div className="w-full h-50 bg-gray-300"></div>
-          <div className="w-35 h-35 bg-gray-500 rounded-full border border-white border-5 mt-[-70px] ml-4 "></div>
+          {profileData?.avatar ? (
+            <img
+              src={profileData?.avatar}
+              className="w-35 h-35 rounded-full border border-white border-5 mt-[-70px] ml-4 object-cover "
+            />
+          ) : (
+            <div className="w-35 h-35 flex items-center justify-center bg-gray-100 rounded-full overflow-hidden border border-white border-5 mt-[-70px] ml-4">
+              <BsPersonFill size={50} />
+            </div>
+          )}
           {loading ? (
             ""
           ) : activeUserId === userId ? (

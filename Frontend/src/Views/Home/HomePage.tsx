@@ -1,5 +1,5 @@
 import axios from "axios";
-import { use, useContext, useEffect, useMemo, useState } from "react";
+import { use, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { IoSearchOutline } from "react-icons/io5";
 import type { Post, UserProfile } from "../../Lib/types";
 import { useForm, type SubmitHandler } from "react-hook-form";
@@ -8,6 +8,17 @@ import LoadingSpinner from "../../Lib/Assets/LoadingSpinner";
 import ProgressBar from "../../Lib/Assets/ProgressBar";
 import { useNavigate } from "react-router";
 import { autoGrow } from "../../Lib/functions";
+import supabase from "../../Lib/database";
+import { AuthContext } from "../../Lib/Contexts/AuthContext";
+import { BsPersonFill } from "react-icons/bs";
+import { MdOutlinePermMedia } from "react-icons/md";
+
+function getPublicUrls(paths: string[]) {
+  return paths.map((path) => {
+    const { data } = supabase.storage.from("avatars").getPublicUrl(path);
+    return data.publicUrl; // string
+  });
+}
 
 type Inputs = {
   content: string;
@@ -17,12 +28,18 @@ type Props = {};
 
 function HomePage({}: Props) {
   let navigate = useNavigate();
+  const { activeUserAvatar } = useContext(AuthContext);
 
   const [posts, setPosts] = useState<Post[]>([]);
   const [contentState, setContentState] = useState(false);
   const [postsLoading, setPostsLoading] = useState(false);
   const [newPostLoading, setNewPostLoading] = useState(false);
   const { register, handleSubmit, reset } = useForm<Inputs>({});
+
+  const [previewUrl, setPreviewUrl] = useState<string | undefined>();
+  const [error, setError] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const openFileDialog = () => inputRef.current?.click();
 
   const textarea = document.getElementById(
     "post-textarea"
@@ -57,6 +74,7 @@ function HomePage({}: Props) {
           reply_to: null,
           replies: 0,
           followed: false,
+          avatar: activeUserAvatar,
         },
         ...originalPosts,
       ]);
@@ -79,6 +97,13 @@ function HomePage({}: Props) {
           "http://localhost:3000/user/posts"
         );
         console.log(posts);
+        const avatars = posts.map((post) => {
+          return post.avatar ? post.avatar : "";
+        });
+        const urls = getPublicUrls(avatars);
+        console.log(urls);
+
+        console.log(avatars);
         setPosts(posts);
         setPostsLoading(false);
       } catch (error) {
@@ -103,6 +128,23 @@ function HomePage({}: Props) {
     }
   };
 
+  function handlePhoto(file?: File) {
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setError("The file must be an image.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError(`The image must be less than ${5} MB.`);
+      return;
+    }
+
+    setError(null);
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
+  }
+
   return (
     <div className="grid grid-cols-[1fr_clamp(0px,35vw,900px)] max-[1000px]:grid-cols-[1fr]">
       <div className="h-screen ">
@@ -114,30 +156,57 @@ function HomePage({}: Props) {
           onSubmit={handleSubmit(onSubmit)}
           className="w-full border-b border-gray-200 p-4 border-x"
         >
-          <div className="flex gap-x-2  ">
-            <div className="w-12 h-11 rounded-4xl border "></div>
-            <textarea
-              onClick={(e) => {
-                console.log(e.currentTarget.style.height);
-              }}
-              {...register("content")}
-              rows={1}
-              onChange={(e) => {
-                autoGrow(e.currentTarget);
+          <div className="flex flex-col">
+            <div className="flex gap-x-2  ">
+              {activeUserAvatar ? (
+                <img
+                  src={activeUserAvatar}
+                  className="w-11 h-11 rounded-4xl object-cover"
+                />
+              ) : (
+                <div className="w-11 h-11 flex items-center justify-center bg-gray-100 rounded-full overflow-hidden">
+                  <BsPersonFill />
+                </div>
+              )}
+              <textarea
+                onClick={(e) => {
+                  console.log(e.currentTarget.style.height);
+                }}
+                {...register("content")}
+                rows={1}
+                onChange={(e) => {
+                  autoGrow(e.currentTarget);
 
-                if (e.target.value.trim()) {
-                  setContentState(true);
-                } else {
-                  setContentState(false);
-                }
-              }}
-              className="post-textarea focus:outline-none overflow-visible resize-none w-full text-xl mt-1 ml-1"
-              id={"post-textarea"}
-              placeholder="What's happening?"
-            ></textarea>
+                  if (e.target.value.trim()) {
+                    setContentState(true);
+                  } else {
+                    setContentState(false);
+                  }
+                }}
+                className="post-textarea focus:outline-none overflow-visible resize-none w-full text-xl mt-1 ml-1"
+                id={"post-textarea"}
+                placeholder="What's happening?"
+              ></textarea>
+            </div>
+            <img className="h-auto w-full mx-auto" src={previewUrl} />
           </div>
           <hr className="border-t border-gray-200 mt-5 ml-10 mr-2" />
-          <div className="flex place-content-end">
+          <div className="flex place-content-end justify-between">
+            <input
+              ref={inputRef}
+              type="file"
+              accept="image/*"
+              className="sr-only"
+              onChange={(e) => {
+                handlePhoto(e.target.files?.[0]);
+              }}
+            />
+            <MdOutlinePermMedia
+              className="ml-15 mt-5 my-auto text-blue-400"
+              size={25}
+              onClick={openFileDialog}
+            />
+
             <button
               type="submit"
               disabled={!contentState}
@@ -163,6 +232,7 @@ function HomePage({}: Props) {
             user_id={post.user_id}
             replies={post.replies}
             followed={post.followed}
+            avatar={post.avatar}
           />
         ))}
         {postsLoading && (
