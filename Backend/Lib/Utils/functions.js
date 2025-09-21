@@ -1,5 +1,4 @@
 const BASE = process.env.SUPABASE_URL;
-const BUCKET = "avatars";
 
 export function createHandle(fullName) {
   const firstName = fullName.trim().split(" ")[0];
@@ -7,5 +6,8 @@ export function createHandle(fullName) {
   return `@${firstName}${random}`;
 }
 
-export const toPublicUrl = (path) =>
-  `${BASE}/storage/v1/object/public/${BUCKET}${path}`;
+export const toPublicUrl = (path, bucket) =>
+  `${BASE}/storage/v1/object/public/${bucket}/${path}`;
+
+export const toPrivateUrl = (path, bucket) =>
+  `${BASE}/storage/v1/object/public/${bucket}/${path}`;

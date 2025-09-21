@@ -144,7 +144,7 @@ export default function SignUpFlow() {
         "http://localhost:3000/auth/signup",
         data
       );
-      const path = `/avatars/${signUpResponse.user.id}/${file?.name}`;
+      const path = `avatars/${signUpResponse.user.id}/${file?.name}`;
 
       if (file) {
         const { data: storageResponse, error: storageError } =

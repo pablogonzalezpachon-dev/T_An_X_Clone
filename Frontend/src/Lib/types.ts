@@ -39,4 +39,8 @@ export type Post = {
   replies: number;
   followed: boolean;
   avatar: string | null;
+  file_1: string | null;
+  file_2: string | null;
+  file_3: string | null;
+  file_4: string | null;
 };

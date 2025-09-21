@@ -75,6 +75,10 @@ function ProfilePostsPage({}: Props) {
             replies={post.replies}
             followed={post.followed}
             avatar={post.avatar}
+            file_1={post.file_1}
+            file_2={post.file_2}
+            file_3={post.file_3}
+            file_4={post.file_4}
           />
         ))
       )}

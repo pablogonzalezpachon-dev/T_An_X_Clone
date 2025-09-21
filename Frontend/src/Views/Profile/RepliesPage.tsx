@@ -72,6 +72,10 @@ function RepliesPage({}: Props) {
             replies={reply.replies}
             followed={reply.followed}
             avatar={reply.avatar}
+            file_1={reply.file_1}
+            file_2={reply.file_2}
+            file_3={reply.file_3}
+            file_4={reply.file_4}
           />
         ))
       )}

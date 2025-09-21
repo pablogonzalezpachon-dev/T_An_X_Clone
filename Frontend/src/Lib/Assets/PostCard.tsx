@@ -39,6 +39,10 @@ type Props = {
   replies: number;
   followed: boolean;
   avatar: string | null;
+  file_1: string | null;
+  file_2: string | null;
+  file_3: string | null;
+  file_4: string | null;
 };
 
 function PostCard({
@@ -55,6 +59,10 @@ function PostCard({
   replies,
   followed,
   avatar,
+  file_1,
+  file_2,
+  file_3,
+  file_4,
 }: Props) {
   const location = useLocation();
   const navigate = useNavigate();
@@ -170,6 +178,12 @@ function PostCard({
       </div>
       <div className="px-13 mt-[-30px]">
         <p className="whitespace-pre-wrap break-all">{content}</p>
+      </div>
+      <div>
+        {file_1 && <img src={file_1} alt="" />}
+        {file_2 && <img src={file_2} alt="" />}
+        {file_3 && <img src={file_3} alt="" />}
+        {file_4 && <img src={file_4} alt="" />}
       </div>
       <div className="h-5 w-full mt-5 flex justify-evenly">
         <div className="flex items-center gap-x-1 ">

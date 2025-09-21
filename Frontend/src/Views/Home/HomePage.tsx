@@ -12,6 +12,8 @@ import supabase from "../../Lib/database";
 import { AuthContext } from "../../Lib/Contexts/AuthContext";
 import { BsPersonFill } from "react-icons/bs";
 import { MdOutlinePermMedia } from "react-icons/md";
+import { IoCloseCircle } from "react-icons/io5";
+import FileGrid from "../../Lib/Assets/FileGrid";
 
 function getPublicUrls(paths: string[]) {
   return paths.map((path) => {
@@ -40,12 +42,19 @@ function HomePage({}: Props) {
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const openFileDialog = () => inputRef.current?.click();
+  const [files, setFiles] = useState<File[]>([]);
 
   const textarea = document.getElementById(
     "post-textarea"
   ) as HTMLTextAreaElement;
 
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
+    const {
+      data: { session },
+      error,
+    } = await supabase.auth.getSession();
+    console.log(session);
+    console.log(error);
     const originalPosts = posts;
     try {
       setContentState(false);
@@ -53,13 +62,21 @@ function HomePage({}: Props) {
       const { data: profileData } = await axios.get<UserProfile[]>(
         `http://localhost:3000/user/profile`
       );
+
+      const form = new FormData();
+      form.append("content", data.content ?? "");
+      form.append("replyTo", ""); // or omit if null
+      for (const file of files.slice(0, 4)) {
+        form.append("media", file); // name doesn't matter; busboy reads all files
+      }
+
       const { data: postId } = await axios.post<number>(
-        "http://localhost:3000/user/post",
-        {
-          ...data,
-          replyTo: null,
-        }
+        "http://localhost:3000/post/media",
+        form
       );
+      console.log("YOHOOOOO IT WORKED", postId);
+      const paths: string[] = [];
+
       setPosts([
         {
           ...data,
@@ -75,10 +92,15 @@ function HomePage({}: Props) {
           replies: 0,
           followed: false,
           avatar: activeUserAvatar,
+          file_1: paths[0] || null,
+          file_2: paths[1] || null,
+          file_3: paths[2] || null,
+          file_4: paths[3] || null,
         },
         ...originalPosts,
       ]);
       reset();
+      setFiles([]);
       autoGrow(textarea);
       setNewPostLoading(false);
     } catch (e) {
@@ -131,18 +153,18 @@ function HomePage({}: Props) {
   function handlePhoto(file?: File) {
     if (!file) return;
 
-    if (!file.type.startsWith("image/")) {
-      setError("The file must be an image.");
+    if (!file.type.startsWith("image/") && !file.type.startsWith("video/")) {
+      setError("The file must be an image or a video");
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      setError(`The image must be less than ${5} MB.`);
+    if (file.size > 50 * 1024 * 1024) {
+      setError(`The file must be less than ${50} MB.`);
       return;
     }
 
     setError(null);
-    const url = URL.createObjectURL(file);
-    setPreviewUrl(url);
+    setFiles([...files, file]);
+    if (inputRef.current) inputRef.current.value = "";
   }
 
   return (
@@ -188,28 +210,37 @@ function HomePage({}: Props) {
                 placeholder="What's happening?"
               ></textarea>
             </div>
-            <img className="h-auto w-full mx-auto" src={previewUrl} />
+            <FileGrid
+              files={files}
+              setFiles={setFiles}
+              error={error}
+              setError={setError}
+            />
           </div>
           <hr className="border-t border-gray-200 mt-5 ml-10 mr-2" />
-          <div className="flex place-content-end justify-between">
+          <div className="sticky bottom-0 bg-white flex place-content-end justify-between">
             <input
               ref={inputRef}
               type="file"
-              accept="image/*"
+              accept="image/* video/*"
               className="sr-only"
               onChange={(e) => {
                 handlePhoto(e.target.files?.[0]);
+                e.currentTarget.value = "";
               }}
             />
-            <MdOutlinePermMedia
-              className="ml-15 mt-5 my-auto text-blue-400"
-              size={25}
+            <button
+              type="button"
+              disabled={files.length >= 4}
+              className="text-blue-400 disabled:text-gray-200"
               onClick={openFileDialog}
-            />
+            >
+              <MdOutlinePermMedia className="ml-15 mt-5 my-auto" size={25} />
+            </button>
 
             <button
               type="submit"
-              disabled={!contentState}
+              disabled={!contentState && files.length === 0}
               className="disabled:opacity-50 bg-black rounded-3xl text-md w-18 text-white font-bold h-10 mt-3  "
             >
               Post
@@ -233,6 +264,10 @@ function HomePage({}: Props) {
             replies={post.replies}
             followed={post.followed}
             avatar={post.avatar}
+            file_1={post.file_1}
+            file_2={post.file_2}
+            file_3={post.file_3}
+            file_4={post.file_4}
           />
         ))}
         {postsLoading && (

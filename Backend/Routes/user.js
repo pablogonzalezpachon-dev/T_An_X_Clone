@@ -1,7 +1,5 @@
 import express from "express";
-import jwt from "jsonwebtoken";
 import sql from "../Lib/Utils/db.js";
-import { createClient } from "@supabase/supabase-js";
 import { supabase } from "../Lib/Utils/supabaseClients.js";
 import { toPublicUrl } from "../Lib/Utils/functions.js";
 
@@ -29,7 +27,10 @@ userRouter.post("/avatar", async (req, res) => {
 
   try {
     const avatarUpload = await sql`
-    update profiles set avatar = ${toPublicUrl(path)} where id = ${activeUserId}
+    update profiles set avatar = ${toPublicUrl(
+      path,
+      "avatars"
+    )} where id = ${activeUserId}
     `;
     res.status(200).json("Image uploaded correctly");
   } catch (e) {
@@ -76,11 +77,42 @@ userRouter.post("/post", async (req, res) => {
   }
 });
 
+userRouter.post("/post/media", async (req, res) => {
+  const activeUserId = req.session.userId;
+  const postId = req.body.postId;
+  const paths = req.body.paths;
+  const pathsValues = [];
+  for (let i = 0; i < 4; i++) {
+    if (paths[i]) {
+      pathsValues.push(paths[i]);
+    } else {
+      pathsValues.push(null);
+    }
+  }
+
+  try {
+    const mediaUploads = await sql`
+      UPDATE posts
+        SET file_1 = ${pathsValues[0]},
+            file_2 = ${pathsValues[1]},
+            file_3 = ${pathsValues[2]},
+            file_4 = ${pathsValues[3]}
+      WHERE id = ${postId}
+        AND created_by = ${activeUserId};
+    `;
+
+    res.status(201).json(mediaUploads);
+  } catch (error) {
+    console.error("Error uploading media:", error);
+    res.status(500).json({ message: "Error uploading media" });
+  }
+});
+
 userRouter.get("/posts", async (req, res) => {
   const userId = req.session.userId;
   try {
     const posts =
-      await sql`select p.id, p.date_of_creation, p.content, u.name, u.t_identifier, u.id as user_id, u.avatar, count(l.id) AS likes, COALESCE(BOOL_OR(l.who_liked = ${userId}), false) AS active_user_liked, COALESCE(BOOL_OR(p.created_by = ${userId}), false) AS active_user_creator, p.reply_to, (SELECT COUNT(*) FROM posts WHERE reply_to = p.id) AS replies, COALESCE(BOOL_OR(f.following = ${userId}), false) as followed from posts p left join profiles u on p.created_by = u.id left join likes l on p.id = l.post_id left join follows f on p.created_by = f.followed where p.reply_to IS NULL group by p.id, p.date_of_creation, p.content, u.name, u.t_identifier, u.id order by p.date_of_creation desc;`;
+      await sql`select p.id, p.date_of_creation, p.content, p.file_1, p.file_2, p.file_3, p.file_4, u.name, u.t_identifier, u.id as user_id, u.avatar, count(l.id) AS likes, COALESCE(BOOL_OR(l.who_liked = ${userId}), false) AS active_user_liked, COALESCE(BOOL_OR(p.created_by = ${userId}), false) AS active_user_creator, p.reply_to, (SELECT COUNT(*) FROM posts WHERE reply_to = p.id) AS replies, COALESCE(BOOL_OR(f.following = ${userId}), false) as followed from posts p left join profiles u on p.created_by = u.id left join likes l on p.id = l.post_id left join follows f on p.created_by = f.followed where p.reply_to IS NULL group by p.id, p.date_of_creation, p.content, p.file_1, p.file_2, p.file_3, p.file_4, u.name, u.t_identifier, u.id order by p.date_of_creation desc;`;
     res.json(posts);
   } catch (error) {
     console.error("Error retrieving posts:", error);

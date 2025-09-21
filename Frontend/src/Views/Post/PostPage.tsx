@@ -116,6 +116,10 @@ function PostPage({}: Props) {
             replies: 0,
             followed: false,
             avatar: activeUserAvatar,
+            file_1: postData?.file_1 || null,
+            file_2: postData?.file_2 || null,
+            file_3: postData?.file_3 || null,
+            file_4: postData?.file_4 || null,
           },
           ...replies,
         ]);
@@ -335,6 +339,10 @@ function PostPage({}: Props) {
             replies={reply.replies}
             followed={reply.followed}
             avatar={reply.avatar}
+            file_1={reply.file_1}
+            file_2={reply.file_2}
+            file_3={reply.file_3}
+            file_4={reply.file_4}
           />
         ))}
         {repliesLoading && (

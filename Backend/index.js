@@ -6,11 +6,11 @@ import dotenv from "dotenv";
 import sql from "./Lib/Utils/db.js";
 import authRouter from "./Routes/auth.js";
 import userRouter from "./Routes/user.js";
+import postRouter from "./Routes/post.js";
 
 dotenv.config();
 
 const app = express();
-
 app.use(
   session({
     secret: process.env.SESSION_SECRET,
@@ -22,10 +22,16 @@ app.use(
   })
 );
 
-app.use(express.json());
+const indexRouter = express.Router();
+app.use(indexRouter, express.json());
+
 app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 app.use("/auth", authRouter);
 app.use("/user", requireAuth, userRouter);
+app.use("/post", requireAuth, postRouter);
+
+authRouter.use(express.json());
+userRouter.use(express.json());
 
 function requireAuth(req, res, next) {
   if (req.session.authorization) {
