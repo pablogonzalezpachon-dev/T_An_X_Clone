@@ -81,25 +81,24 @@ function MainLayout({}: Props) {
                 </p>
               </div>
             </NavLink>
-            <NavLink to="/messages">
-              <div className="flex gap-x-5">
-                <MdEmail size={35} className="my-auto max-[1300px]:mx-auto" />
-                <p className="text-2xl font-semibold my-auto block max-[1300px]:hidden">
-                  Messages
-                </p>
-              </div>
-            </NavLink>
-            <NavLink to="/nexus">
-              <div className="flex gap-x-5">
-                <GiRollingEnergy
-                  size={35}
-                  className="my-auto max-[1300px]:mx-auto"
-                />
-                <p className="text-2xl font-semibold my-auto block max-[1300px]:hidden">
-                  Nexus
-                </p>
-              </div>
-            </NavLink>
+
+            <div className="flex gap-x-5">
+              <MdEmail size={35} className="my-auto max-[1300px]:mx-auto" />
+              <p className="text-2xl font-semibold my-auto block max-[1300px]:hidden">
+                Messages
+              </p>
+            </div>
+
+            <div className="flex gap-x-5">
+              <GiRollingEnergy
+                size={35}
+                className="my-auto max-[1300px]:mx-auto"
+              />
+              <p className="text-2xl font-semibold my-auto block max-[1300px]:hidden">
+                Nexus
+              </p>
+            </div>
+
             <NavLink to={`/${id}`}>
               <div className="flex gap-x-5">
                 <BsPerson size={35} className="my-auto max-[1300px]:mx-auto" />
@@ -108,17 +107,16 @@ function MainLayout({}: Props) {
                 </p>
               </div>
             </NavLink>
-            <NavLink to="/settings">
-              <div className="flex gap-x-5">
-                <IoSettingsOutline
-                  size={35}
-                  className="my-auto max-[1300px]:mx-auto"
-                />
-                <p className="text-2xl font-semibold my-auto block max-[1300px]:hidden">
-                  Settings
-                </p>
-              </div>
-            </NavLink>
+
+            <div className="flex gap-x-5">
+              <IoSettingsOutline
+                size={35}
+                className="my-auto max-[1300px]:mx-auto"
+              />
+              <p className="text-2xl font-semibold my-auto block max-[1300px]:hidden">
+                Settings
+              </p>
+            </div>
           </nav>
           <button className="bg-black rounded-3xl text-lg w-60 max-[1300px]:w-20 text-white font-bold h-13 mt-6 items-end min-[1300px]:ml-20 ">
             <p className="max-[1300px]:hidden">Post</p>

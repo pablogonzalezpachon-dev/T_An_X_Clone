@@ -1,18 +1,21 @@
 import axios from "axios";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { BiRepost } from "react-icons/bi";
 import { BsPersonFill, BsThreeDots } from "react-icons/bs";
 import { FaEye, FaRegBookmark, FaRegHeart } from "react-icons/fa";
 import { FiMessageSquare } from "react-icons/fi";
 import { useNavigate, useParams } from "react-router";
 import type { Post, UserProfile } from "../../Lib/types";
-import { autoGrow, formatTimeDotDate } from "../../Lib/functions";
+import { autoGrow, formatTimeDotDate, toPublicUrl } from "../../Lib/functions";
 import { IoIosArrowRoundBack } from "react-icons/io";
 import LoadingSpinner from "../../Lib/Assets/LoadingSpinner";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import PostCard from "../../Lib/Assets/PostCard";
 import ProgressBar from "../../Lib/Assets/ProgressBar";
 import { AuthContext } from "../../Lib/Contexts/AuthContext";
+import FileGrid from "../../Lib/Assets/FileGrid";
+import TemporaryFileGrid from "../../Lib/Assets/TemporaryFileGrid";
+import { MdOutlinePermMedia } from "react-icons/md";
 
 type Props = {};
 
@@ -42,6 +45,11 @@ function PostPage({}: Props) {
   const { register, handleSubmit, reset } = useForm<Inputs>({});
   const [newReplyLoading, setNewReplyLoading] = useState(false);
   const { activeUserAvatar } = useContext(AuthContext);
+  const [media, setMedia] = useState<(string | null)[]>([]);
+  const [files, setFiles] = useState<File[]>([]);
+  const [filesError, setFilesError] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const openFileDialog = () => inputRef.current?.click();
 
   async function handleLike() {
     const originalNumLikes = numLikes;
@@ -80,6 +88,22 @@ function PostPage({}: Props) {
       console.error("Error unliking post:", error);
     }
   }
+  function handlePhoto(file?: File) {
+    if (!file) return;
+
+    if (!file.type.startsWith("image/") && !file.type.startsWith("video/")) {
+      setFilesError("The file must be an image or a video");
+      return;
+    }
+    if (file.size > 50 * 1024 * 1024) {
+      setFilesError(`The file must be less than ${50} MB.`);
+      return;
+    }
+    setFilesError(null);
+    setFiles([...files, file]);
+    if (inputRef.current) inputRef.current.value = "";
+  }
+
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
     const originalReplies = replies;
     try {
@@ -92,19 +116,25 @@ function PostPage({}: Props) {
       const { data: profileData } = await axios.get<UserProfile[]>(
         `http://localhost:3000/user/profile`
       );
+      const form = new FormData();
+      form.append("content", data.content ?? "");
+      form.append("replyTo", `${postId}`); // or omit if null
+      for (const file of files.slice(0, 4)) {
+        form.append("media", file); // name doesn't matter; busboy reads all files
+      }
 
-      const { data: replyPostId } = await axios.post<number>(
-        "http://localhost:3000/user/post",
-        {
-          ...data,
-          replyTo: postIdNum,
-        }
-      );
+      const {
+        data: { postId: createdPostId, storedPaths },
+      } = await axios.post<{
+        postId: number;
+        storedPaths: string[];
+      }>("http://localhost:3000/post/media", form);
+
       postId &&
         setReplies([
           {
             ...data,
-            id: replyPostId,
+            id: createdPostId,
             date_of_creation: new Date().toISOString(),
             name: profileData[0].name,
             t_identifier: profileData[0].t_identifier,
@@ -116,16 +146,17 @@ function PostPage({}: Props) {
             replies: 0,
             followed: false,
             avatar: activeUserAvatar,
-            file_1: postData?.file_1 || null,
-            file_2: postData?.file_2 || null,
-            file_3: postData?.file_3 || null,
-            file_4: postData?.file_4 || null,
+            file_1: toPublicUrl(storedPaths[0], "post_media"),
+            file_2: toPublicUrl(storedPaths[1], "post_media"),
+            file_3: toPublicUrl(storedPaths[2], "post_media"),
+            file_4: toPublicUrl(storedPaths[3], "post_media"),
           },
           ...replies,
         ]);
       reset();
       autoGrow(textarea);
       setNewReplyLoading(false);
+      setFiles([]);
     } catch (e) {
       setContentState(true);
       setReplies(originalReplies);
@@ -147,6 +178,12 @@ function PostPage({}: Props) {
         setPostData(postData);
         setnumLikes(postData.likes);
         setLiked(postData.active_user_liked);
+        setMedia([
+          postData.file_1,
+          postData.file_2,
+          postData.file_3,
+          postData.file_4,
+        ]);
 
         const { data: repliesData } = await axios.get<Post[]>(
           `http://localhost:3000/user/post/replies/${postId}`
@@ -180,7 +217,7 @@ function PostPage({}: Props) {
 
   return (
     <div className="grid grid-cols-[1fr_clamp(0px,35vw,900px)] max-[1000px]:grid-cols-[1fr]">
-      <div className="h-screen border-x border-gray-200">
+      <div className="h-250 border-x border-gray-200">
         <div className="w-full h-15 border-b border-gray-200 flex items-center place-content-between gap-x-40 px-4">
           <div className="flex items-center gap-x-7">
             <IoIosArrowRoundBack
@@ -235,6 +272,15 @@ function PostPage({}: Props) {
           <div className="mt-[-5px]">
             <p className="whitespace-pre-wrap break-all">{postData?.content}</p>
           </div>
+
+          <div className="flex mx-auto">
+            <FileGrid
+              files={media.filter(
+                (file) => file !== null && file !== undefined
+              )}
+            />
+          </div>
+
           {postLoading && (
             <LoadingSpinner style="w-7 h-7 text-gray-200 animate-spin fill-blue-400 mx-auto mt-[-40px] mb-5" />
           )}
@@ -281,7 +327,7 @@ function PostPage({}: Props) {
         </div>
         <form
           onSubmit={handleSubmit(onSubmit)}
-          className="w-full border-b border-gray-200 p-4"
+          className="w-full border-b border-x border-gray-200 p-4"
         >
           <div className="flex gap-x-2 ">
             {activeUserAvatar ? (
@@ -311,11 +357,36 @@ function PostPage({}: Props) {
               placeholder="Post your reply"
             ></textarea>
           </div>
+          <TemporaryFileGrid
+            files={files}
+            setFiles={setFiles}
+            error={filesError}
+            setError={setFilesError}
+          />
 
-          <div className="flex place-content-end">
+          <div className="sticky bottom-0 bg-white flex place-content-end justify-between">
+            <input
+              ref={inputRef}
+              type="file"
+              accept="image/* video/*"
+              className="sr-only"
+              onChange={(e) => {
+                handlePhoto(e.target.files?.[0]);
+                e.currentTarget.value = "";
+              }}
+            />
+            <button
+              type="button"
+              disabled={files.length >= 4}
+              className="text-blue-400 disabled:text-gray-200"
+              onClick={openFileDialog}
+            >
+              <MdOutlinePermMedia className="ml-15 mt-5 my-auto" size={25} />
+            </button>
+
             <button
               type="submit"
-              disabled={!contentState}
+              disabled={!contentState && files.length === 0}
               className="disabled:opacity-50 bg-black rounded-3xl text-md w-18 text-white font-bold h-10 mt-3  "
             >
               Reply

@@ -1,3 +1,5 @@
+const BASE = import.meta.env.VITE_SUPABASE_URL;
+
 export function isValidDate(year: number, month: number, day: number): boolean {
   const today = new Date();
   let age = today.getFullYear() - year;
@@ -157,4 +159,9 @@ export function formatTimeDotDate(
 export const autoGrow = (el: HTMLTextAreaElement) => {
   el.style.height = "0px"; // reset
   el.style.height = el.scrollHeight + "px"; // fit content
+};
+
+export const toPublicUrl = (path: string, bucket: string) => {
+  if (!path) return null;
+  return `${BASE}/storage/v1/object/public/${bucket}/${path}`;
 };

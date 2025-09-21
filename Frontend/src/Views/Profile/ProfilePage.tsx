@@ -192,7 +192,7 @@ function ProfilePage({}: Props) {
 
         <Outlet />
       </div>
-      <div className="h-screen px-10">
+      <div className="h-screen px-10 max-[1000px]:hidden">
         <form>
           <div className="relative mt-2 w-90 mx-auto">
             <div className="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">

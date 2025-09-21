@@ -6,8 +6,9 @@ export function createHandle(fullName) {
   return `@${firstName}${random}`;
 }
 
-export const toPublicUrl = (path, bucket) =>
-  `${BASE}/storage/v1/object/public/${bucket}/${path}`;
-
-export const toPrivateUrl = (path, bucket) =>
-  `${BASE}/storage/v1/object/public/${bucket}/${path}`;
+export const toPublicUrl = (path, bucket) => {
+  if (!path) {
+    return null;
+  }
+  return `${BASE}/storage/v1/object/public/${bucket}/${path}`;
+};

@@ -107,12 +107,14 @@ postRouter.post("/media", async (req, res) => {
       }
 
       // 3) Save up to 4 paths into columns file_1..file_4 (if you use a separate media table, insert there instead)
+      console.log("Stored paths:", storedPaths);
       const [p1, p2, p3, p4] = [
-        storedPaths[0] ?? null,
-        storedPaths[1] ?? null,
-        storedPaths[2] ?? null,
-        storedPaths[3] ?? null,
+        storedPaths[0] || null,
+        storedPaths[1] || null,
+        storedPaths[2] || null,
+        storedPaths[3] || null,
       ];
+      console.log("Final paths:", p1, p2, p3, p4);
 
       await sql`
         UPDATE posts
@@ -127,7 +129,7 @@ postRouter.post("/media", async (req, res) => {
       `;
 
       // 4) Respond
-      res.status(201).json(postId);
+      res.status(201).json({ postId, storedPaths });
     } catch (err) {
       console.log(err);
       res

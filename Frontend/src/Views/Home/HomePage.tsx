@@ -7,13 +7,13 @@ import PostCard from "../../Lib/Assets/PostCard";
 import LoadingSpinner from "../../Lib/Assets/LoadingSpinner";
 import ProgressBar from "../../Lib/Assets/ProgressBar";
 import { useNavigate } from "react-router";
-import { autoGrow } from "../../Lib/functions";
+import { autoGrow, toPublicUrl } from "../../Lib/functions";
 import supabase from "../../Lib/database";
 import { AuthContext } from "../../Lib/Contexts/AuthContext";
 import { BsPersonFill } from "react-icons/bs";
 import { MdOutlinePermMedia } from "react-icons/md";
-import { IoCloseCircle } from "react-icons/io5";
-import FileGrid from "../../Lib/Assets/FileGrid";
+import FileGrid from "../../Lib/Assets/TemporaryFileGrid";
+import TemporaryFileGrid from "../../Lib/Assets/TemporaryFileGrid";
 
 function getPublicUrls(paths: string[]) {
   return paths.map((path) => {
@@ -49,12 +49,6 @@ function HomePage({}: Props) {
   ) as HTMLTextAreaElement;
 
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
-    const {
-      data: { session },
-      error,
-    } = await supabase.auth.getSession();
-    console.log(session);
-    console.log(error);
     const originalPosts = posts;
     try {
       setContentState(false);
@@ -70,12 +64,16 @@ function HomePage({}: Props) {
         form.append("media", file); // name doesn't matter; busboy reads all files
       }
 
-      const { data: postId } = await axios.post<number>(
-        "http://localhost:3000/post/media",
-        form
-      );
-      console.log("YOHOOOOO IT WORKED", postId);
-      const paths: string[] = [];
+      const {
+        data: { postId, storedPaths },
+      } = await axios.post<{
+        postId: number;
+        storedPaths: string[];
+      }>("http://localhost:3000/post/media", form);
+
+      console.log(postId);
+      console.log(storedPaths);
+      console.log(toPublicUrl(storedPaths[0], "post_media"));
 
       setPosts([
         {
@@ -92,10 +90,10 @@ function HomePage({}: Props) {
           replies: 0,
           followed: false,
           avatar: activeUserAvatar,
-          file_1: paths[0] || null,
-          file_2: paths[1] || null,
-          file_3: paths[2] || null,
-          file_4: paths[3] || null,
+          file_1: toPublicUrl(storedPaths[0], "post_media"),
+          file_2: toPublicUrl(storedPaths[1], "post_media"),
+          file_3: toPublicUrl(storedPaths[2], "post_media"),
+          file_4: toPublicUrl(storedPaths[3], "post_media"),
         },
         ...originalPosts,
       ]);
@@ -139,6 +137,13 @@ function HomePage({}: Props) {
   const handleDelete = async (postId: number) => {
     const originalPosts = posts;
     try {
+      const { data: files, error: listErr } = await supabase.storage
+        .from("post_media")
+        .list();
+      console.log(listErr);
+
+      console.log("The files are", files);
+
       setPosts((prevPosts) => prevPosts.filter((post) => post.id !== postId));
       const response = await axios.delete(
         `http://localhost:3000/user/post/${postId}`
@@ -210,7 +215,7 @@ function HomePage({}: Props) {
                 placeholder="What's happening?"
               ></textarea>
             </div>
-            <FileGrid
+            <TemporaryFileGrid
               files={files}
               setFiles={setFiles}
               error={error}
@@ -218,6 +223,7 @@ function HomePage({}: Props) {
             />
           </div>
           <hr className="border-t border-gray-200 mt-5 ml-10 mr-2" />
+          {/* Maybe reuse */}
           <div className="sticky bottom-0 bg-white flex place-content-end justify-between">
             <input
               ref={inputRef}

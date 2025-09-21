@@ -24,6 +24,7 @@ import {
 import DropDownButton from "./DropDownButton";
 import { AuthContext } from "../Contexts/AuthContext";
 import { BsPersonFill } from "react-icons/bs";
+import FileGrid from "./FileGrid";
 
 type Props = {
   id: number;
@@ -66,6 +67,7 @@ function PostCard({
 }: Props) {
   const location = useLocation();
   const navigate = useNavigate();
+  const files = [file_1, file_2, file_3, file_4];
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [liked, setLiked] = useState(active_user_liked);
@@ -109,24 +111,13 @@ function PostCard({
     }
   }
 
-  async function handleFollow() {
-    try {
-      const { data: followResponse } = await axios.post<string>(
-        "http://localhost:3000/user/follow",
-        { user_id }
-      );
-      console.log(followResponse);
-    } catch (e) {
-      console.log(e);
-    }
-  }
-
   return (
     <div
       className="w-full border-b border-x border-gray-200 p-4 cursor-pointer"
       onClick={() => {
         if (dialogOpen) return;
         navigate("/" + user_id + "/status/" + id);
+        window.scrollTo({ top: 0 });
       }}
     >
       <div className="w-full flex h-15 justify-between">
@@ -154,7 +145,7 @@ function PostCard({
           >
             {name}
           </p>
-          <p className="text-gray-500">
+          <p className="text-gray-500 truncate">
             {t_identifier} ·{" "}
             {timeAgo(date_of_creation, {
               locale: "en-US",
@@ -179,12 +170,12 @@ function PostCard({
       <div className="px-13 mt-[-30px]">
         <p className="whitespace-pre-wrap break-all">{content}</p>
       </div>
-      <div>
-        {file_1 && <img src={file_1} alt="" />}
-        {file_2 && <img src={file_2} alt="" />}
-        {file_3 && <img src={file_3} alt="" />}
-        {file_4 && <img src={file_4} alt="" />}
-      </div>
+
+      <FileGrid
+        padding={true}
+        files={files.filter((file) => file !== null && file !== undefined)}
+      />
+
       <div className="h-5 w-full mt-5 flex justify-evenly">
         <div className="flex items-center gap-x-1 ">
           <FiMessageSquare color="gray" size={20} className="" />
