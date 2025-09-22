@@ -14,6 +14,8 @@ import { BsPersonFill } from "react-icons/bs";
 import { MdOutlinePermMedia } from "react-icons/md";
 import FileGrid from "../../Lib/Assets/TemporaryFileGrid";
 import TemporaryFileGrid from "../../Lib/Assets/TemporaryFileGrid";
+import { set } from "zod";
+import ProfileCard from "../../Lib/Assets/ProfileCard";
 
 function getPublicUrls(paths: string[]) {
   return paths.map((path) => {
@@ -43,6 +45,8 @@ function HomePage({}: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const openFileDialog = () => inputRef.current?.click();
   const [files, setFiles] = useState<File[]>([]);
+
+  const [profiles, setProfiles] = useState<UserProfile[]>([]);
 
   const textarea = document.getElementById(
     "post-textarea"
@@ -131,7 +135,22 @@ function HomePage({}: Props) {
         setPostsLoading(false);
       }
     }
-    fetchPosts();
+    async function fetchProfiles() {
+      try {
+        const { data: profiles } = await axios.get<UserProfile[]>(
+          "http://localhost:3000/user/profiles"
+        );
+        console.log(profiles);
+        setProfiles(profiles);
+      } catch (error) {
+        console.error("Error fetching profiles:", error);
+      }
+    }
+    async function fetchData() {
+      await Promise.all([fetchPosts(), fetchProfiles()]);
+    }
+
+    fetchData();
   }, []);
 
   const handleDelete = async (postId: number) => {
@@ -291,8 +310,16 @@ function HomePage({}: Props) {
             />
           </div>
         </form>
-        <div className="w-90 mx-auto border border-gray-300 text-xl font-bold mt-5 p-2 rounded-3xl h-20 ">
-          <p>Who to follow</p>
+        <div className="w-90 mx-auto border border-gray-300 text-xl font-bold mt-5 p-2 rounded-2xl h-20 ">
+          <p className="ml-2">Who to follow</p>
+          {profiles.map((profile) => (
+            <ProfileCard
+              key={profile.id}
+              name={profile.name}
+              avatar={profile.avatar}
+              t_identifier={profile.t_identifier}
+            />
+          ))}
         </div>
       </div>
     </div>

@@ -474,4 +474,21 @@ userRouter.delete("/unfollow/:followedUserId", async (req, res) => {
   }
 });
 
+userRouter.get("/profiles", async (req, res) => {
+  const activeUserId = req.session.userId;
+  try {
+    const profiles = await sql`
+SELECT u.name, u.t_identifier, u.id, u.avatar
+FROM profiles u
+WHERE u.id <> ${activeUserId}
+ORDER BY random()
+LIMIT 5;
+`;
+    res.json(profiles);
+  } catch (error) {
+    console.error("Error retrieving profiles:", error);
+    res.status(500).json({ message: "Error retrieving profiles" });
+  }
+});
+
 export default userRouter;
