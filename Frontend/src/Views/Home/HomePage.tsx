@@ -137,13 +137,6 @@ function HomePage({}: Props) {
   const handleDelete = async (postId: number) => {
     const originalPosts = posts;
     try {
-      const { data: files, error: listErr } = await supabase.storage
-        .from("post_media")
-        .list();
-      console.log(listErr);
-
-      console.log("The files are", files);
-
       setPosts((prevPosts) => prevPosts.filter((post) => post.id !== postId));
       const response = await axios.delete(
         `http://localhost:3000/user/post/${postId}`

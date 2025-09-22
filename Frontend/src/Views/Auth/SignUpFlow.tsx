@@ -26,7 +26,6 @@ console.log(
 );
 
 import type { User } from "@supabase/auth-js";
-import supabase from "../../Lib/database";
 
 const months = [
   "January",
@@ -93,7 +92,7 @@ export default function SignUpFlow() {
             const { data } = await axios.post(
               "http://localhost:3000/auth/email",
               {
-                email: e.target.value.trim(),
+                email: e.target.value.trim().toLocaleLowerCase(),
               }
             );
             if (data.length) {
@@ -139,33 +138,28 @@ export default function SignUpFlow() {
     setLoading(true);
     console.log(data);
 
+    const form = new FormData();
+    form.append("name", data.name);
+    form.append("email", data.email);
+    form.append("monthOfBirth", data.monthOfBirth.toString());
+    form.append("dayOfBirth", data.dayOfBirth.toString());
+    form.append("yearOfBirth", data.yearOfBirth.toString());
+    form.append("password", data.password);
+    if (file) {
+      form.append("avatar", file);
+    }
+
     try {
       const { data: signUpResponse } = await axios.post<{ user: User }>(
-        "http://localhost:3000/auth/signup",
-        data
+        "http://localhost:3000/signup/user",
+        form
       );
-      const path = `avatars/${signUpResponse.user.id}/${file?.name}`;
-
-      if (file) {
-        const { data: storageResponse, error: storageError } =
-          await supabase.storage.from("avatars").upload(path, file);
-        if (storageError) {
-          throw storageError;
-        }
-        console.log(storageResponse);
-      }
 
       const loginResponse = await axios.post(
         "http://localhost:3000/auth/login",
         { email: data.email, password: data.password }
       );
       console.log("loginRespose:", loginResponse);
-
-      const { data: uploadResponse } = await axios.post<string>(
-        "http://localhost:3000/user/avatar",
-        { path }
-      );
-      console.log(uploadResponse);
 
       navigate("/home");
       setLoading(false);

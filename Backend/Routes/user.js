@@ -99,7 +99,7 @@ userRouter.get("/posts", async (req, res) => {
         u.t_identifier,
         u.id AS user_id,
         u.avatar,
-        COUNT(l.id) AS likes,
+        (SELECT COUNT(*) FROM likes l WHERE l.post_id = p.id) AS likes,
         COALESCE(BOOL_OR(l.who_liked = ${userId}), false) AS active_user_liked,
         COALESCE(BOOL_OR(p.created_by = ${userId}), false) AS active_user_creator,
         p.reply_to,
@@ -175,11 +175,12 @@ userRouter.delete("/post/:id", async (req, res) => {
     console.log("The files areeee", files);
 
     if (listErr) throw listErr;
-
-    const paths = files.map((f) => `${prefix}/${f.name}`);
-    const { data: removedFiles, error: removedFilesError } =
-      await supabase.storage.from("post_media").remove(paths); // deletes these files
-    if (removedFilesError) throw removedFilesError;
+    if (files.length > 0) {
+      const paths = files.map((f) => `${prefix}/${f.name}`);
+      const { data: removedFiles, error: removedFilesError } =
+        await supabase.storage.from("post_media").remove(paths); // deletes these files
+      if (removedFilesError) throw removedFilesError;
+    }
 
     const result =
       await sql`DELETE FROM posts WHERE id = ${postId} AND created_by = ${activeUserId};`;
@@ -210,7 +211,7 @@ userRouter.get("/post/:id", async (req, res) => {
         u.t_identifier,
         u.id AS user_id,
         u.avatar,
-        COUNT(l.id) AS likes,
+        (SELECT COUNT(*) FROM likes l WHERE l.post_id = p.id) AS likes,
         COALESCE(BOOL_OR(l.who_liked = ${active_user}), false) AS active_user_liked,
         COALESCE(BOOL_OR(p.created_by = ${active_user}), false) AS active_user_creator,
         p.reply_to,
@@ -258,7 +259,7 @@ userRouter.get("/post/replies/:id", async (req, res) => {
         u.t_identifier,
         u.id AS user_id,
         u.avatar,
-        COUNT(l.id) AS likes,
+        (SELECT COUNT(*) FROM likes l WHERE l.post_id = p.id) AS likes,
         COALESCE(BOOL_OR(l.who_liked = ${active_user}), false) AS active_user_liked,
         COALESCE(BOOL_OR(p.created_by = ${active_user}), false) AS active_user_creator,
         p.reply_to,
@@ -304,7 +305,7 @@ userRouter.get("/profile/:userId/posts", async (req, res) => {
         u.t_identifier,
         u.id AS user_id,
         u.avatar,
-        COUNT(l.id) AS likes,
+        (SELECT COUNT(*) FROM likes l WHERE l.post_id = p.id) AS likes,
         COALESCE(BOOL_OR(l.who_liked = ${activeUserId}), false) AS active_user_liked,
         COALESCE(BOOL_OR(p.created_by = ${activeUserId}), false) AS active_user_creator,
         p.reply_to,
@@ -355,7 +356,7 @@ userRouter.get("/profile/:userId/replies", async (req, res) => {
         u.t_identifier,
         u.id AS user_id,
         u.avatar,
-        COUNT(l.id) AS likes,
+        (SELECT COUNT(*) FROM likes l WHERE l.post_id = p.id) AS likes,
         COALESCE(BOOL_OR(l.who_liked = ${activeUserId}), false) AS active_user_liked,
         COALESCE(BOOL_OR(p.created_by = ${activeUserId}), false) AS active_user_creator,
         p.reply_to,

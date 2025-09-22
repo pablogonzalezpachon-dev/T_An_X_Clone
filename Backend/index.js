@@ -7,6 +7,7 @@ import sql from "./Lib/Utils/db.js";
 import authRouter from "./Routes/auth.js";
 import userRouter from "./Routes/user.js";
 import postRouter from "./Routes/post.js";
+import signUpRouter from "./Routes/signUp.js";
 
 dotenv.config();
 
@@ -29,6 +30,7 @@ app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 app.use("/auth", authRouter);
 app.use("/user", requireAuth, userRouter);
 app.use("/post", requireAuth, postRouter);
+app.use("/signup", signUpRouter);
 
 authRouter.use(express.json());
 userRouter.use(express.json());

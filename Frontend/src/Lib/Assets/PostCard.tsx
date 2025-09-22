@@ -1,4 +1,3 @@
-import { SlUserFollow } from "react-icons/sl";
 import { timeAgo } from "../functions";
 import { FiMessageSquare } from "react-icons/fi";
 import { BiRepost } from "react-icons/bi";
@@ -6,23 +5,9 @@ import { FaRegHeart } from "react-icons/fa";
 import { FaEye } from "react-icons/fa";
 import { FaRegBookmark } from "react-icons/fa";
 import axios from "axios";
-import { useContext, useState } from "react";
-import { BsThreeDots } from "react-icons/bs";
+import { useState } from "react";
 import { useLocation, useNavigate } from "react-router";
-import { FiTrash2 } from "react-icons/fi";
-import {
-  Dialog,
-  DialogBackdrop,
-  DialogPanel,
-  DialogTitle,
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuItems,
-  Transition,
-} from "@headlessui/react";
 import DropDownButton from "./DropDownButton";
-import { AuthContext } from "../Contexts/AuthContext";
 import { BsPersonFill } from "react-icons/bs";
 import FileGrid from "./FileGrid";
 
