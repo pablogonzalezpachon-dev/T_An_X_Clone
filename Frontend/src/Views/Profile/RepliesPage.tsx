@@ -59,6 +59,7 @@ function RepliesPage({}: Props) {
       ) : (
         profileReplies?.map((reply) => (
           <PostCard
+            key={reply.id}
             id={reply.id}
             content={reply.content}
             date_of_creation={reply.date_of_creation}

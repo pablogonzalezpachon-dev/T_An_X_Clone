@@ -46,7 +46,7 @@ function HomePage({}: Props) {
   const openFileDialog = () => inputRef.current?.click();
   const [files, setFiles] = useState<File[]>([]);
 
-  const [profiles, setProfiles] = useState<UserProfile[]>([]);
+  const [profiles, setProfiles] = useState<UserProfile[]>();
 
   const textarea = document.getElementById(
     "post-textarea"
@@ -185,7 +185,7 @@ function HomePage({}: Props) {
   }
 
   return (
-    <div className="grid grid-cols-[1fr_clamp(0px,35vw,900px)] max-[1000px]:grid-cols-[1fr]">
+    <div className="grid grid-cols-1">
       <div className="h-screen ">
         <div className="w-full h-15 border-b border-x border-gray-200 flex items-center place-content-center gap-x-40">
           <p className="text-gray-600 font-semibold">For you</p>
@@ -295,32 +295,6 @@ function HomePage({}: Props) {
             }
           />
         )}
-      </div>
-      <div className="h-screen px-10 max-[1000px]:hidden">
-        <form>
-          <div className="relative mt-2 w-90 mx-auto">
-            <div className="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
-              <IoSearchOutline color={"gray"} />
-            </div>
-            <input
-              type="text"
-              id="input-group-1"
-              className=" h-13 border border-gray-300 text-gray-900 text-sm rounded-3xl focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5"
-              placeholder="name@flowbite.com"
-            />
-          </div>
-        </form>
-        <div className="w-90 mx-auto border border-gray-300 text-xl font-bold mt-5 p-2 rounded-2xl h-20 ">
-          <p className="ml-2">Who to follow</p>
-          {profiles.map((profile) => (
-            <ProfileCard
-              key={profile.id}
-              name={profile.name}
-              avatar={profile.avatar}
-              t_identifier={profile.t_identifier}
-            />
-          ))}
-        </div>
       </div>
     </div>
   );

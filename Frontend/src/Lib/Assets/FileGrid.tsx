@@ -42,7 +42,7 @@ function FileGrid({ files, padding }: Props) {
           );
         } else {
           return (
-            <div className={`${expandFirst ? "col-span-2" : ""}`}>
+            <div className={`${expandFirst ? "col-span-2" : ""}`} key={index}>
               <img
                 className={`max-h-110 rounded-2xl my-auto object-cover ${
                   files.length > 1 ? "h-50 w-full" : "h-auto min-w-80"

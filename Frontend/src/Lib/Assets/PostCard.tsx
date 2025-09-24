@@ -98,7 +98,7 @@ function PostCard({
 
   return (
     <div
-      className="w-full border-b border-x border-gray-200 p-4 cursor-pointer"
+      className="w-full border-b border-x border-gray-200 p-4 cursor-pointer hover:bg-gray-50"
       onClick={() => {
         if (dialogOpen) return;
         navigate("/" + user_id + "/status/" + id);

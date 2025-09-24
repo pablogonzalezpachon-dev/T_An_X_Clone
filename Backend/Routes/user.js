@@ -478,11 +478,21 @@ userRouter.get("/profiles", async (req, res) => {
   const activeUserId = req.session.userId;
   try {
     const profiles = await sql`
-SELECT u.name, u.t_identifier, u.id, u.avatar
-FROM profiles u
-WHERE u.id <> ${activeUserId}
-ORDER BY random()
-LIMIT 5;
+      SELECT *
+      FROM (
+        SELECT
+          u.name,
+          u.t_identifier,
+          u.id as id,
+          u.avatar,
+          COALESCE(BOOL_OR(f.following = '13f2a198-cade-41c4-804c-7c5dc1b61b29'), false) AS followed
+        FROM profiles u
+        LEFT JOIN follows f ON u.id = f.followed
+        GROUP BY u.name, u.t_identifier, u.id, u.avatar
+      ) s
+      WHERE s.followed = false AND s.id <> '13f2a198-cade-41c4-804c-7c5dc1b61b29'
+      ORDER BY random()
+      LIMIT 5;
 `;
     res.json(profiles);
   } catch (error) {

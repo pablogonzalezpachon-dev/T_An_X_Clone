@@ -1,7 +1,7 @@
-import { NavLink, useNavigate } from "react-router";
+import { NavLink, Router, useLocation, useNavigate } from "react-router";
 import { Outlet } from "react-router";
 import { MdHomeFilled } from "react-icons/md";
-import { IoSearch } from "react-icons/io5";
+import { IoSearch, IoSearchOutline } from "react-icons/io5";
 import { MdEmail } from "react-icons/md";
 import { GiRollingEnergy } from "react-icons/gi";
 import { BsPerson } from "react-icons/bs";
@@ -13,13 +13,25 @@ import type { Auth, UserProfile } from "../Lib/types";
 import supabase from "../Lib/database";
 import SignOutButton from "../Lib/Assets/SignOutButton";
 import { AuthContext } from "../Lib/Contexts/AuthContext";
+import ProfileCard from "../Lib/Assets/ProfileCard";
+import {
+  Dialog,
+  DialogBackdrop,
+  DialogPanel,
+  DialogTitle,
+} from "@headlessui/react";
 
 type Props = {};
 
 function MainLayout({}: Props) {
+  const location = useLocation();
+
+  console.log(location);
   const [id, setId] = useState("");
   const [profileData, setProfileData] = useState<UserProfile>();
   const { setActiveUserAvatar } = useContext(AuthContext);
+  const [profiles, setProfiles] = useState<UserProfile[]>();
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   const navigate = useNavigate();
   useEffect(() => {
@@ -43,10 +55,25 @@ function MainLayout({}: Props) {
       }
     };
     verifyAuth();
+
+    const fetchProfiles = async () => {
+      try {
+        const { data: profiles } = await axios.get<UserProfile[]>(
+          "http://localhost:3000/user/profiles"
+        );
+        setProfiles(profiles);
+      } catch (e) {
+        console.log(e);
+      }
+    };
+    const fetchData = async () => {
+      await Promise.all([fetchProfiles(), verifyAuth()]);
+    };
+    fetchData();
   }, []);
 
   return (
-    <div className="grid grid-cols-[clamp(100px,25vw,400px)_1fr] max-[1300px]:grid-cols-[100px_1fr]">
+    <div className="grid grid-cols-[clamp(100px,25vw,400px)_1fr_clamp(0px,35vw,500px)] max-[1300px]:grid-cols-[100px_1fr_clamp(0px,35vw,500px)] max-[1000px]:grid-cols-[100px_1fr]">
       <div className="sticky top-0 self-start h-screen flex flex-col items-center">
         <div className="fixed flex flex-col items-center">
           <svg
@@ -139,6 +166,60 @@ function MainLayout({}: Props) {
 
       <div>
         <Outlet />
+      </div>
+      <div className="h-screen px-10 max-[1000px]:hidden sticky flex flex-col">
+        <div className="fixed flex flex-col mx-auto">
+          {location.pathname !== "/explore" ? (
+            <form className="">
+              <div className="relative mt-2 w-90 mx-auto">
+                <div className="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
+                  <IoSearchOutline color={"gray"} />
+                </div>
+                <input
+                  type="text"
+                  id="input-group-1"
+                  className="h-13 border border-gray-300 text-gray-900 text-sm rounded-3xl block w-full ps-10 p-2.5 focus:outline-none focus:border-blue-500
+             focus:ring-1 focus:ring-blue-500"
+                  placeholder="Search"
+                  onFocus={() => {
+                    setDialogOpen(true);
+                  }}
+                  onBlur={() => setDialogOpen(false)}
+                />
+                <div
+                  className={`absolute ${
+                    dialogOpen ? "block" : "hidden"
+                  } text-gray-500 bg-white w-full text-center min-h-30 shadow-2xl rounded-2xl top-14 pt-3`}
+                >
+                  Try searching for people, lists, or keywords
+                </div>
+              </div>
+            </form>
+          ) : (
+            <div className="w-full mt-2 h-1 bg-gray-200 rounded-full"></div>
+          )}
+
+          <div className="">
+            <div className="w-90 mx-auto border border-gray-300 text-xl font-bold mt-5 py-2 rounded-2xl">
+              {<p className="ml-2 ml-5 mb-4">Who to follow</p>}
+
+              {profiles?.map((profile) => (
+                <ProfileCard
+                  user_id={profile.id}
+                  key={profile.id}
+                  name={profile.name}
+                  avatar={profile.avatar}
+                  t_identifier={profile.t_identifier}
+                />
+              ))}
+              {profiles?.length === 0 && (
+                <p className="text-gray-400 text-center text-md">
+                  Looks like there's no one to follow...
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

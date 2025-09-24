@@ -216,7 +216,7 @@ function PostPage({}: Props) {
   };
 
   return (
-    <div className="grid grid-cols-[1fr_clamp(0px,35vw,900px)] max-[1000px]:grid-cols-[1fr]">
+    <div className="grid grid-cols-1">
       <div className="h-250 border-x border-gray-200">
         <div className="w-full h-15 border-b border-gray-200 flex items-center place-content-between gap-x-40 px-4">
           <div className="flex items-center gap-x-7">
@@ -419,22 +419,6 @@ function PostPage({}: Props) {
         {repliesLoading && (
           <LoadingSpinner style="w-7 h-7 text-gray-200 animate-spin fill-blue-400 mx-auto mt-20" />
         )}
-      </div>
-      <div className="h-screen px-10 max-[1000px]:hidden">
-        <form>
-          <div className="relative mt-2 w-90 mx-auto">
-            <div className="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none"></div>
-            <input
-              type="text"
-              id="input-group-1"
-              className=" h-13 border border-gray-300 text-gray-900 text-sm rounded-3xl focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5"
-              placeholder="name@flowbite.com"
-            />
-          </div>
-        </form>
-        <div className="w-90 mx-auto border border-gray-300 text-xl font-bold mt-5 p-2 rounded-3xl h-20 ">
-          <p>Who to follow</p>
-        </div>
       </div>
     </div>
   );

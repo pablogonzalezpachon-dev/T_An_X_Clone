@@ -52,6 +52,7 @@ function LikesPage({}: Props) {
       ) : (
         profileLikedPosts?.map((post) => (
           <PostCard
+            key={post.id}
             id={post.id}
             content={post.content}
             date_of_creation={post.date_of_creation}
