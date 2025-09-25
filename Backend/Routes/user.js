@@ -501,4 +501,27 @@ userRouter.get("/profiles", async (req, res) => {
   }
 });
 
+userRouter.post("/search", async (req, res) => {
+  const query = req.body.query;
+
+  try {
+    const rows = await sql`
+      SELECT DISTINCT u.name, u.t_identifier, u.id, u.avatar
+      FROM profiles u
+      LEFT JOIN follows f ON u.id = f.followed
+      WHERE
+        regexp_replace(u.name, '[[:space:]]+', '', 'g') ILIKE
+          regexp_replace(${query}, '[[:space:]]+', '', 'g') || '%'
+        OR u.name ILIKE '%' || ${query.trim()} || '%'
+        OR u.t_identifier ILIKE '%' || ${query.trim()} || '%'
+      LIMIT 3
+    `;
+
+    res.json(rows);
+  } catch (error) {
+    console.error("Error searching profiles:", error);
+    res.status(500).json({ message: "Error searching profiles" });
+  }
+});
+
 export default userRouter;

@@ -4,7 +4,7 @@ import { MdHomeFilled } from "react-icons/md";
 import { IoSearch, IoSearchOutline } from "react-icons/io5";
 import { MdEmail } from "react-icons/md";
 import { GiRollingEnergy } from "react-icons/gi";
-import { BsPerson } from "react-icons/bs";
+import { BsPerson, BsPersonFill } from "react-icons/bs";
 import { IoSettingsOutline } from "react-icons/io5";
 import { BiPencil } from "react-icons/bi";
 import axios from "axios";
@@ -20,6 +20,7 @@ import {
   DialogPanel,
   DialogTitle,
 } from "@headlessui/react";
+import debounce from "debounce";
 
 type Props = {};
 
@@ -32,6 +33,8 @@ function MainLayout({}: Props) {
   const { setActiveUserAvatar } = useContext(AuthContext);
   const [profiles, setProfiles] = useState<UserProfile[]>();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [searchedProfiles, setSearchedProfiles] = useState<UserProfile[]>();
+  const [searchQuery, setSearchQuery] = useState<string>();
 
   const navigate = useNavigate();
   useEffect(() => {
@@ -71,6 +74,20 @@ function MainLayout({}: Props) {
     };
     fetchData();
   }, []);
+
+  const search = debounce(async (query: string) => {
+    try {
+      setSearchQuery(query);
+      const { data: results } = await axios.post<UserProfile[]>(
+        `http://localhost:3000/user/search`,
+        { query }
+      );
+      setSearchedProfiles(results);
+      // Do something with the search results
+    } catch {
+      console.log("Search failed");
+    }
+  }, 500);
 
   return (
     <div className="grid grid-cols-[clamp(100px,25vw,400px)_1fr_clamp(0px,35vw,500px)] max-[1300px]:grid-cols-[100px_1fr_clamp(0px,35vw,500px)] max-[1000px]:grid-cols-[100px_1fr]">
@@ -181,17 +198,67 @@ function MainLayout({}: Props) {
                   className="h-13 border border-gray-300 text-gray-900 text-sm rounded-3xl block w-full ps-10 p-2.5 focus:outline-none focus:border-blue-500
              focus:ring-1 focus:ring-blue-500"
                   placeholder="Search"
+                  autoComplete="off"
                   onFocus={() => {
                     setDialogOpen(true);
                   }}
+                  onChange={(e) => {
+                    if (e.target.value.trim() === "") {
+                      setSearchedProfiles(undefined);
+                      return;
+                    } else {
+                      search(e.target.value);
+                    }
+                  }}
                   onBlur={() => setDialogOpen(false)}
                 />
+
                 <div
                   className={`absolute ${
                     dialogOpen ? "block" : "hidden"
-                  } text-gray-500 bg-white w-full text-center min-h-30 shadow-2xl rounded-2xl top-14 pt-3`}
+                  } bg-white w-full text-center min-h-30 shadow-2xl rounded-2xl top-14 pt-3 text-gray-500`}
                 >
-                  Try searching for people, lists, or keywords
+                  {searchedProfiles && (
+                    <div className="flex flex items-center gap-x-2 px-4 h-15 hover:bg-gray-100 cursor-pointer">
+                      <IoSearchOutline
+                        size={20}
+                        className="inline text-bold "
+                      />
+                      <div className="text-left ">{searchQuery}</div>
+                    </div>
+                  )}
+                  {searchedProfiles
+                    ? searchedProfiles.map((profile) => (
+                        <div
+                          key={profile.id}
+                          className="flex items-center place-content-between px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                          onMouseDown={() => navigate(`/${profile.id}`)}
+                        >
+                          <div className="flex items-center">
+                            {profile.avatar ? (
+                              <img
+                                src={profile.avatar}
+                                alt={profile.name}
+                                className="w-12 h-12 rounded-full mr-4 object-cover hover:brightness-75"
+                              />
+                            ) : (
+                              <div className="w-12 h-12 flex justify-center items-center mr-4 bg-gray-100 rounded-full overflow-hidden">
+                                <BsPersonFill />
+                              </div>
+                            )}
+
+                            <div className="text-left">
+                              <p className="font-bold text-sm hover:underline text-black">
+                                {profile.name}
+                              </p>
+                              <p className="text-gray-400 text-sm font-semibold">
+                                {profile.t_identifier}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    : `Try searching for people, lists, or keywords`}
                 </div>
               </div>
             </form>
