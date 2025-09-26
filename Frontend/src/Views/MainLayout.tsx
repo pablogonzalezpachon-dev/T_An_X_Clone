@@ -8,18 +8,11 @@ import { BsPerson, BsPersonFill } from "react-icons/bs";
 import { IoSettingsOutline } from "react-icons/io5";
 import { BiPencil } from "react-icons/bi";
 import axios from "axios";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import type { Auth, UserProfile } from "../Lib/types";
-import supabase from "../Lib/database";
 import SignOutButton from "../Lib/Assets/SignOutButton";
 import { AuthContext } from "../Lib/Contexts/AuthContext";
 import ProfileCard from "../Lib/Assets/ProfileCard";
-import {
-  Dialog,
-  DialogBackdrop,
-  DialogPanel,
-  DialogTitle,
-} from "@headlessui/react";
 import debounce from "debounce";
 
 type Props = {};
@@ -35,6 +28,8 @@ function MainLayout({}: Props) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [searchedProfiles, setSearchedProfiles] = useState<UserProfile[]>();
   const [searchQuery, setSearchQuery] = useState<string>();
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
 
   const navigate = useNavigate();
   useEffect(() => {
@@ -73,6 +68,15 @@ function MainLayout({}: Props) {
       await Promise.all([fetchProfiles(), verifyAuth()]);
     };
     fetchData();
+
+    function onDocMouseDown(e: MouseEvent) {
+      const el = searchContainerRef.current;
+      if (!el) return;
+      if (!el.contains(e.target as Node)) {
+        setDialogOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", onDocMouseDown);
   }, []);
 
   const search = debounce(async (query: string) => {
@@ -185,14 +189,15 @@ function MainLayout({}: Props) {
         <Outlet />
       </div>
       <div className="h-screen px-10 max-[1000px]:hidden sticky flex flex-col">
-        <div className="fixed flex flex-col mx-auto">
+        <div className="fixed flex flex-col mx-auto" ref={searchContainerRef}>
           {location.pathname !== "/explore" ? (
-            <form className="">
+            <form className="" onSubmit={(e) => e.preventDefault()}>
               <div className="relative mt-2 w-90 mx-auto">
                 <div className="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
                   <IoSearchOutline color={"gray"} />
                 </div>
                 <input
+                  ref={searchInputRef}
                   type="text"
                   id="input-group-1"
                   className="h-13 border border-gray-300 text-gray-900 text-sm rounded-3xl block w-full ps-10 p-2.5 focus:outline-none focus:border-blue-500
@@ -210,16 +215,21 @@ function MainLayout({}: Props) {
                       search(e.target.value);
                     }
                   }}
-                  onBlur={() => setDialogOpen(false)}
                 />
 
                 <div
                   className={`absolute ${
                     dialogOpen ? "block" : "hidden"
-                  } bg-white w-full text-center min-h-30 shadow-2xl rounded-2xl top-14 pt-3 text-gray-500`}
+                  } bg-white w-full text-center min-h-30 shadow-2xl rounded-2xl top-14 pt-3 text-gray-500
+                  `}
                 >
                   {searchedProfiles && (
-                    <div className="flex flex items-center gap-x-2 px-4 h-15 hover:bg-gray-100 cursor-pointer">
+                    <div
+                      className="flex flex items-center gap-x-2 px-4 h-15 hover:bg-gray-100 cursor-pointer"
+                      onClick={() => {
+                        navigate(`/explore?query=${searchQuery}`);
+                      }}
+                    >
                       <IoSearchOutline
                         size={20}
                         className="inline text-bold "
@@ -230,9 +240,14 @@ function MainLayout({}: Props) {
                   {searchedProfiles
                     ? searchedProfiles.map((profile) => (
                         <div
+                          onClick={() => {
+                            navigate(`/${profile.id}`);
+                            searchInputRef.current!.value = "";
+                            setSearchedProfiles(undefined);
+                            setDialogOpen(false);
+                          }}
                           key={profile.id}
                           className="flex items-center place-content-between px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                          onMouseDown={() => navigate(`/${profile.id}`)}
                         >
                           <div className="flex items-center">
                             {profile.avatar ? (
