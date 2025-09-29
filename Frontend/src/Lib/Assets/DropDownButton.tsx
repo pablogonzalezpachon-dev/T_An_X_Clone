@@ -111,7 +111,56 @@ function DropDownButton({
             <BsThreeDots size={20} className="m-auto" />
           </MenuButton>
         </div>
+        <Dialog open={dialogOpen} onClose={() => {}} className="relative z-10">
+          <DialogBackdrop
+            transition
+            className="fixed inset-0 bg-gray-500/75 transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"
+          />
 
+          <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div className=" flex min-h-full  justify-center p-4 text-center items-center">
+              <DialogPanel
+                transition
+                className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in sm:my-8 w-80 data-closed:sm:translate-y-0 data-closed:sm:scale-95"
+              >
+                <div className="bg-white px-5 pt-2">
+                  <div className=" text-center sm:mt-0 sm:ml-4 sm:text-left">
+                    <DialogTitle
+                      as="h1"
+                      className="font-bold text-gray-900 text-xl mt-1 text-left"
+                    >
+                      Delete post?
+                    </DialogTitle>
+                    <p className="mt-3 text-gray-500">
+                      This can't be undone and it will be removed from your
+                      profile, the timeline of any accounts that follow you, and
+                      from search results.{" "}
+                    </p>
+                  </div>
+                  <div className="flex flex-col mt-5 gap-y-4 mb-8 items-center px-3">
+                    <button
+                      onClick={() => {
+                        onDelete();
+                        setDialogOpen(false);
+                      }}
+                      className="bg-red-500 text-white h-10 font-bold rounded-3xl w-full"
+                    >
+                      Delete
+                    </button>
+                    <button
+                      onClick={() => {
+                        setDialogOpen(false);
+                      }}
+                      className="border border-gray-300 h-10 font-bold rounded-3xl w-full"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </DialogPanel>
+            </div>
+          </div>
+        </Dialog>
         <Transition
           enter="transition ease-out duration-100"
           enterFrom="transform opacity-0 scale-95"

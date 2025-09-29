@@ -30,8 +30,8 @@ function MainLayout({}: Props) {
   const [searchQuery, setSearchQuery] = useState<string>();
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
-
   const navigate = useNavigate();
+
   useEffect(() => {
     const verifyAuth = async () => {
       try {
@@ -82,9 +82,8 @@ function MainLayout({}: Props) {
   const search = debounce(async (query: string) => {
     try {
       setSearchQuery(query);
-      const { data: results } = await axios.post<UserProfile[]>(
-        `http://localhost:3000/user/search`,
-        { query }
+      const { data: results } = await axios.get<UserProfile[]>(
+        `http://localhost:3000/user/search/profiles/?q=${query}`
       );
       setSearchedProfiles(results);
       // Do something with the search results
@@ -191,7 +190,17 @@ function MainLayout({}: Props) {
       <div className="h-screen px-10 max-[1000px]:hidden sticky flex flex-col">
         <div className="fixed flex flex-col mx-auto" ref={searchContainerRef}>
           {location.pathname !== "/explore" ? (
-            <form className="" onSubmit={(e) => e.preventDefault()}>
+            <form
+              className=""
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (searchInputRef.current?.value.trim() === "") {
+                  return;
+                } else {
+                  navigate(`/explore?query=${searchInputRef.current?.value}`);
+                }
+              }}
+            >
               <div className="relative mt-2 w-90 mx-auto">
                 <div className="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
                   <IoSearchOutline color={"gray"} />

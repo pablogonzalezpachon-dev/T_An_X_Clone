@@ -3,11 +3,8 @@ import cors from "cors";
 import jwt from "jsonwebtoken";
 import session from "express-session";
 import dotenv from "dotenv";
-import sql from "./Lib/Utils/db.js";
 import authRouter from "./Routes/auth.js";
 import userRouter from "./Routes/user.js";
-import postRouter from "./Routes/post.js";
-import signUpRouter from "./Routes/signUp.js";
 
 dotenv.config();
 
@@ -23,17 +20,13 @@ app.use(
   })
 );
 
-const indexRouter = express.Router();
-app.use(indexRouter, express.json());
+app.use(express.json());
 
 app.use(cors({ origin: "http://localhost:5173", credentials: true }));
-app.use("/auth", authRouter);
-app.use("/user", requireAuth, userRouter);
-app.use("/post", requireAuth, postRouter);
-app.use("/signup", signUpRouter);
 
-authRouter.use(express.json());
-userRouter.use(express.json());
+app.use("/user", requireAuth, userRouter);
+
+app.use("/auth", authRouter);
 
 function requireAuth(req, res, next) {
   if (req.session.authorization) {

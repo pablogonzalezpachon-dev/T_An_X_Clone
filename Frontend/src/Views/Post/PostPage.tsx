@@ -128,7 +128,7 @@ function PostPage({}: Props) {
       } = await axios.post<{
         postId: number;
         storedPaths: string[];
-      }>("http://localhost:3000/post/media", form);
+      }>("http://localhost:3000/user/post", form);
 
       postId &&
         setReplies([

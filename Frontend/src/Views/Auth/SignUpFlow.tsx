@@ -151,7 +151,7 @@ export default function SignUpFlow() {
 
     try {
       const { data: signUpResponse } = await axios.post<{ user: User }>(
-        "http://localhost:3000/signup/user",
+        "http://localhost:3000/auth/signup",
         form
       );
 
