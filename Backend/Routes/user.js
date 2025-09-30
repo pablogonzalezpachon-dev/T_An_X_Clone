@@ -575,6 +575,58 @@ userRouter.get("/search/posts", async (req, res) => {
   }
 });
 
+userRouter.get("/search/profiles/users", async (req, res) => {
+  const query = req.query.q;
+  const activeUserId = req.session.userId;
+
+  try {
+    const rows = await sql`
+      SELECT DISTINCT 
+        u.avatar,
+        u.bio,
+        u.day_birth,
+        u.email,
+        u.id,
+        u.location,
+        u.main_photo,
+        u.month_birth,
+        u.name,
+        u.t_identifier,
+        u.year_birth,
+        u.created_at,
+        COALESCE(BOOL_OR(f.following = ${activeUserId}), false) AS followed,
+        (SELECT COUNT(*) FROM follows f WHERE f.followed = u.id) AS followers,
+        (SELECT COUNT(*) FROM follows f WHERE f.following = u.id) AS following,
+        (SELECT COUNT(*) FROM posts WHERE created_by = u.id) AS number_of_posts
+      FROM profiles u
+      LEFT JOIN posts p ON p.created_by = u.id
+      LEFT JOIN likes l ON p.id = l.post_id
+      LEFT JOIN follows f ON p.created_by = f.followed
+      WHERE
+        regexp_replace(u.name, '[[:space:]]+', '', 'g') ILIKE
+        regexp_replace(${query}, '[[:space:]]+', '', 'g') || '%'
+        OR u.name ILIKE '%' || ${query.trim()} || '%'
+        OR u.t_identifier ILIKE '%' || ${query.trim()} || '%'
+      GROUP BY
+        p.id,
+        p.date_of_creation,
+        p.content,
+        p.file_1,
+        p.file_2,
+        p.file_3,
+        p.file_4,
+        u.name,
+        u.t_identifier,
+        u.id
+      LIMIT 3;
+    `;
+    res.status(200).json(rows);
+  } catch (error) {
+    console.error("Error searching profiles:", error);
+    res.status(500).json({ message: "Error searching profiles" });
+  }
+});
+
 userRouter.post("/post", async (req, res) => {
   const activeUserId = req.session.userId; // you said you own the session
   if (!activeUserId) {
@@ -708,6 +760,99 @@ userRouter.post("/post", async (req, res) => {
   });
 
   req.pipe(bb);
+});
+
+userRouter.get("/posts/users", async (req, res) => {
+  const activeUserId = req.session.userId;
+  try {
+    const users = await sql`
+      SELECT
+        u.avatar,
+        u.bio,
+        u.day_birth,
+        u.email,
+        u.id,
+        u.location,
+        u.main_photo,
+        u.month_birth,
+        u.name,
+        u.t_identifier,
+        u.year_birth,
+        u.created_at,
+        COALESCE(BOOL_OR(f.following = ${activeUserId}), false) AS followed,
+        (SELECT COUNT(*) FROM follows f WHERE f.followed = u.id) AS followers,
+        (SELECT COUNT(*) FROM follows f WHERE f.following = u.id) AS following,
+        (SELECT COUNT(*) FROM posts WHERE created_by = u.id) AS number_of_posts
+      FROM posts p
+      LEFT JOIN profiles u ON p.created_by = u.id
+      LEFT JOIN likes l ON p.id = l.post_id
+      LEFT JOIN follows f ON p.created_by = f.followed
+      WHERE p.reply_to IS NULL
+      GROUP BY
+        p.id,
+        p.date_of_creation,
+        p.content,
+        p.file_1,
+        p.file_2,
+        p.file_3,
+        p.file_4,
+        u.name,
+        u.t_identifier,
+        u.id
+      ORDER BY p.date_of_creation DESC;
+    `;
+    res.status(200).json(users);
+  } catch (e) {
+    console.log("Error retrieving users", e);
+    res.status(500).json({ message: "Error retrieving users" });
+  }
+});
+
+userRouter.get("/post/replies/:id/users", async (req, res) => {
+  const activeUserId = req.session.userId;
+  const postId = req.params.id;
+  try {
+    const users = await sql`
+      SELECT
+        u.avatar,
+        u.bio,
+        u.day_birth,
+        u.email,
+        u.id,
+        u.location,
+        u.main_photo,
+        u.month_birth,
+        u.name,
+        u.t_identifier,
+        u.year_birth,
+        u.created_at,
+        COALESCE(BOOL_OR(f.following = ${activeUserId}), false) AS followed,
+        (SELECT COUNT(*) FROM follows f WHERE f.followed = u.id) AS followers,
+        (SELECT COUNT(*) FROM follows f WHERE f.following = u.id) AS following,
+        (SELECT COUNT(*) FROM posts WHERE created_by = u.id) AS number_of_posts
+      FROM posts p
+      LEFT JOIN profiles u ON p.created_by = u.id
+      LEFT JOIN likes l ON p.id = l.post_id
+      LEFT JOIN follows f ON p.created_by = f.followed
+      WHERE p.reply_to =  ${postId}
+      GROUP BY
+        p.id,
+        p.date_of_creation,
+        p.content,
+        p.file_1,
+        p.file_2,
+        p.file_3,
+        p.file_4,
+        u.name,
+        u.t_identifier,
+        u.id
+      ORDER BY p.date_of_creation DESC;
+    `;
+    res.status(200).json(users);
+  } catch (e) {
+    console.log("Error retrieving users", e);
+    res.status(500).json({ message: "Error retrieving users" });
+  }
 });
 
 export default userRouter;

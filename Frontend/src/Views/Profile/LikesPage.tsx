@@ -1,31 +1,17 @@
-import React, { useEffect, useState } from "react";
-import { useParams } from "react-router";
+import { useEffect, useState } from "react";
 import type { Post } from "../../Lib/types";
 import axios from "axios";
 import PostCard from "../../Lib/Assets/PostCard";
 import LoadingSpinner from "../../Lib/Assets/LoadingSpinner";
+import useStore from "../../Lib/zustandStore";
+import { handleDelete } from "../../Lib/stateFunctions";
 
 type Props = {};
 
 function LikesPage({}: Props) {
-  const [profileLikedPosts, setProfileLikedPosts] = useState<Post[]>();
   const [loading, setLoading] = useState(false);
-
-  const handleDelete = async (postId: number) => {
-    const originalPosts = profileLikedPosts;
-    try {
-      setProfileLikedPosts((prevPosts) =>
-        prevPosts?.filter((post) => post.id !== postId)
-      );
-      const response = await axios.delete(
-        `http://localhost:3000/user/post/${postId}`
-      );
-      console.log(response);
-    } catch (error) {
-      setProfileLikedPosts(originalPosts);
-      console.error("Error deleting post:", error);
-    }
-  };
+  const likedPosts = useStore((state) => state.posts);
+  const setLikedPosts = useStore((state) => state.setPosts);
 
   useEffect(() => {
     setLoading(true);
@@ -35,7 +21,7 @@ function LikesPage({}: Props) {
           `http://localhost:3000/user/profile/posts/likes`
         );
         setLoading(false);
-        setProfileLikedPosts(likedPosts);
+        setLikedPosts(likedPosts);
         console.log(likedPosts);
       } catch (e) {
         setLoading(false);
@@ -50,7 +36,7 @@ function LikesPage({}: Props) {
       {loading ? (
         <LoadingSpinner style="w-7 h-7 text-gray-200 animate-spin fill-blue-400 mx-auto mt-20" />
       ) : (
-        profileLikedPosts?.map((post) => (
+        likedPosts?.map((post) => (
           <PostCard
             key={post.id}
             id={post.id}
@@ -61,7 +47,7 @@ function LikesPage({}: Props) {
             likes={post.likes}
             active_user_liked={post.active_user_liked}
             active_user_creator={post.active_user_creator}
-            onDelete={handleDelete}
+            onDelete={() => handleDelete(post.id)}
             user_id={post.user_id}
             replies={post.replies}
             followed={post.followed}

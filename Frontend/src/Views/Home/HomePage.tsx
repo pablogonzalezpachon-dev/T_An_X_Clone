@@ -1,21 +1,17 @@
 import axios from "axios";
-import { use, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { IoSearchOutline } from "react-icons/io5";
+import { useEffect, useRef, useState } from "react";
 import type { Post, UserProfile } from "../../Lib/types";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import PostCard from "../../Lib/Assets/PostCard";
 import LoadingSpinner from "../../Lib/Assets/LoadingSpinner";
 import ProgressBar from "../../Lib/Assets/ProgressBar";
-import { useNavigate } from "react-router";
-import { autoGrow, toPublicUrl } from "../../Lib/functions";
+import { autoGrow, toPublicUrl, uniqueById } from "../../Lib/functions";
 import supabase from "../../Lib/database";
-import { AuthContext } from "../../Lib/Contexts/AuthContext";
 import { BsPersonFill } from "react-icons/bs";
 import { MdOutlinePermMedia } from "react-icons/md";
-import FileGrid from "../../Lib/Assets/TemporaryFileGrid";
 import TemporaryFileGrid from "../../Lib/Assets/TemporaryFileGrid";
-import { set } from "zod";
-import ProfileCard from "../../Lib/Assets/ProfileCard";
+import useStore from "../../Lib/zustandStore";
+import { handleDelete } from "../../Lib/stateFunctions";
 
 function getPublicUrls(paths: string[]) {
   return paths.map((path) => {
@@ -31,22 +27,22 @@ type Inputs = {
 type Props = {};
 
 function HomePage({}: Props) {
-  let navigate = useNavigate();
-  const { activeUserAvatar } = useContext(AuthContext);
+  const activeUserProfile = useStore((state) => state.activeUser);
 
-  const [posts, setPosts] = useState<Post[]>([]);
+  const setPosts = useStore((state) => state.setPosts);
+  const posts = useStore((state) => state.posts);
+
   const [contentState, setContentState] = useState(false);
   const [postsLoading, setPostsLoading] = useState(false);
   const [newPostLoading, setNewPostLoading] = useState(false);
   const { register, handleSubmit, reset } = useForm<Inputs>({});
 
-  const [previewUrl, setPreviewUrl] = useState<string | undefined>();
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const openFileDialog = () => inputRef.current?.click();
   const [files, setFiles] = useState<File[]>([]);
 
-  const [profiles, setProfiles] = useState<UserProfile[]>();
+  const recommendedProfiles = useStore((state) => state.recommendedProfiles);
 
   const textarea = document.getElementById(
     "post-textarea"
@@ -57,9 +53,6 @@ function HomePage({}: Props) {
     try {
       setContentState(false);
       setNewPostLoading(true);
-      const { data: profileData } = await axios.get<UserProfile[]>(
-        `http://localhost:3000/user/profile`
-      );
 
       const form = new FormData();
       form.append("content", data.content ?? "");
@@ -75,32 +68,29 @@ function HomePage({}: Props) {
         storedPaths: string[];
       }>("http://localhost:3000/user/post", form);
 
-      console.log(postId);
-      console.log(storedPaths);
-      console.log(toPublicUrl(storedPaths[0], "post_media"));
-
-      setPosts([
-        {
-          ...data,
-          id: postId,
-          date_of_creation: new Date().toISOString(),
-          name: profileData[0].name,
-          t_identifier: profileData[0].t_identifier,
-          likes: 0,
-          active_user_liked: false,
-          active_user_creator: true,
-          user_id: profileData[0].id,
-          reply_to: null,
-          replies: 0,
-          followed: false,
-          avatar: activeUserAvatar,
-          file_1: toPublicUrl(storedPaths[0], "post_media"),
-          file_2: toPublicUrl(storedPaths[1], "post_media"),
-          file_3: toPublicUrl(storedPaths[2], "post_media"),
-          file_4: toPublicUrl(storedPaths[3], "post_media"),
-        },
-        ...originalPosts,
-      ]);
+      activeUserProfile &&
+        setPosts([
+          {
+            ...data,
+            id: postId,
+            date_of_creation: new Date().toISOString(),
+            name: activeUserProfile.name,
+            t_identifier: activeUserProfile.t_identifier,
+            likes: 0,
+            active_user_liked: false,
+            active_user_creator: true,
+            user_id: activeUserProfile.id,
+            reply_to: null,
+            replies: 0,
+            followed: false,
+            avatar: activeUserProfile.avatar,
+            file_1: toPublicUrl(storedPaths[0], "post_media"),
+            file_2: toPublicUrl(storedPaths[1], "post_media"),
+            file_3: toPublicUrl(storedPaths[2], "post_media"),
+            file_4: toPublicUrl(storedPaths[3], "post_media"),
+          },
+          ...originalPosts,
+        ]);
       reset();
       setFiles([]);
       autoGrow(textarea);
@@ -113,7 +103,10 @@ function HomePage({}: Props) {
     }
   };
 
+  const setUsers = useStore((state) => state.setUsers);
+
   useEffect(() => {
+    setPosts([]);
     setPostsLoading(true);
     async function fetchPosts() {
       try {
@@ -129,43 +122,32 @@ function HomePage({}: Props) {
 
         console.log(avatars);
         setPosts(posts);
+
         setPostsLoading(false);
       } catch (error) {
         console.error("Error fetching posts:", error);
         setPostsLoading(false);
       }
     }
-    async function fetchProfiles() {
+
+    async function fetchUsers() {
       try {
-        const { data: profiles } = await axios.get<UserProfile[]>(
-          "http://localhost:3000/user/profiles"
+        const { data: users } = await axios.get<UserProfile[]>(
+          "http://localhost:3000/user/posts/users"
         );
-        console.log(profiles);
-        setProfiles(profiles);
-      } catch (error) {
-        console.error("Error fetching profiles:", error);
+        console.log(uniqueById(users));
+        setUsers(uniqueById([...users, ...(recommendedProfiles || [])]));
+      } catch (e) {
+        console.error("Error fetching users:", e);
       }
     }
+
     async function fetchData() {
-      await Promise.all([fetchPosts(), fetchProfiles()]);
+      await Promise.all([fetchPosts(), fetchUsers()]);
     }
 
     fetchData();
   }, []);
-
-  const handleDelete = async (postId: number) => {
-    const originalPosts = posts;
-    try {
-      setPosts((prevPosts) => prevPosts.filter((post) => post.id !== postId));
-      const response = await axios.delete(
-        `http://localhost:3000/user/post/${postId}`
-      );
-      console.log(response);
-    } catch (error) {
-      setPosts(originalPosts);
-      console.error("Error deleting post:", error);
-    }
-  };
 
   function handlePhoto(file?: File) {
     if (!file) return;
@@ -197,9 +179,9 @@ function HomePage({}: Props) {
         >
           <div className="flex flex-col">
             <div className="flex gap-x-2  ">
-              {activeUserAvatar ? (
+              {activeUserProfile?.avatar ? (
                 <img
-                  src={activeUserAvatar}
+                  src={activeUserProfile.avatar}
                   className="w-11 h-11 rounded-4xl object-cover"
                 />
               ) : (
@@ -277,7 +259,7 @@ function HomePage({}: Props) {
             likes={post.likes}
             active_user_liked={post.active_user_liked}
             active_user_creator={post.active_user_creator}
-            onDelete={handleDelete}
+            onDelete={() => handleDelete(post.id)}
             user_id={post.user_id}
             replies={post.replies}
             followed={post.followed}

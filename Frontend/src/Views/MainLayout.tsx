@@ -1,4 +1,4 @@
-import { NavLink, Router, useLocation, useNavigate } from "react-router";
+import { NavLink, useLocation, useNavigate } from "react-router";
 import { Outlet } from "react-router";
 import { MdHomeFilled } from "react-icons/md";
 import { IoSearch, IoSearchOutline } from "react-icons/io5";
@@ -8,23 +8,26 @@ import { BsPerson, BsPersonFill } from "react-icons/bs";
 import { IoSettingsOutline } from "react-icons/io5";
 import { BiPencil } from "react-icons/bi";
 import axios from "axios";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Auth, UserProfile } from "../Lib/types";
 import SignOutButton from "../Lib/Assets/SignOutButton";
-import { AuthContext } from "../Lib/Contexts/AuthContext";
 import ProfileCard from "../Lib/Assets/ProfileCard";
 import debounce from "debounce";
+import useStore from "../Lib/zustandStore";
 
 type Props = {};
 
 function MainLayout({}: Props) {
+  const activeUserProfile = useStore((state) => state.activeUser);
+  const setActiveUserProfile = useStore((state) => state.setActiveUser);
   const location = useLocation();
+  const recommendedProfiles = useStore((state) => state.recommendedProfiles);
+  const setRecommendedProfiles = useStore(
+    (state) => state.setRecommendedProfiles
+  );
 
   console.log(location);
-  const [id, setId] = useState("");
-  const [profileData, setProfileData] = useState<UserProfile>();
-  const { setActiveUserAvatar } = useContext(AuthContext);
-  const [profiles, setProfiles] = useState<UserProfile[]>();
+
   const [dialogOpen, setDialogOpen] = useState(false);
   const [searchedProfiles, setSearchedProfiles] = useState<UserProfile[]>();
   const [searchQuery, setSearchQuery] = useState<string>();
@@ -38,15 +41,15 @@ function MainLayout({}: Props) {
         const { data: sessionResponse } = await axios.get<{
           user: { data: Auth; exp: number; iat: number };
         }>("http://localhost:3000/session");
+
         const userId = sessionResponse.user.data.user.id;
-        setId(userId);
 
         const { data: profileData } = await axios.get<UserProfile[]>(
           `http://localhost:3000/user/profile/${userId}`
         );
+        setActiveUserProfile(profileData[0]);
+
         console.log(profileData);
-        setProfileData(profileData[0]);
-        setActiveUserAvatar(profileData[0].avatar);
       } catch (e) {
         console.log(e);
         navigate("/");
@@ -59,7 +62,7 @@ function MainLayout({}: Props) {
         const { data: profiles } = await axios.get<UserProfile[]>(
           "http://localhost:3000/user/profiles"
         );
-        setProfiles(profiles);
+        setRecommendedProfiles(profiles);
       } catch (e) {
         console.log(e);
       }
@@ -146,7 +149,7 @@ function MainLayout({}: Props) {
               </p>
             </div>
 
-            <NavLink to={`/${id}`}>
+            <NavLink to={`/${activeUserProfile?.id}`}>
               <div className="flex gap-x-5">
                 <BsPerson size={35} className="my-auto max-[1300px]:mx-auto" />
                 <p className="text-2xl font-semibold my-auto block max-[1300px]:hidden">
@@ -174,11 +177,11 @@ function MainLayout({}: Props) {
             />
           </button>
 
-          {profileData && (
+          {activeUserProfile && (
             <SignOutButton
-              name={profileData.name}
-              t_identifier={profileData.t_identifier}
-              avatar={profileData.avatar}
+              name={activeUserProfile.name}
+              t_identifier={activeUserProfile.t_identifier}
+              avatar={activeUserProfile.avatar}
             />
           )}
         </div>
@@ -294,7 +297,7 @@ function MainLayout({}: Props) {
             <div className="w-90 mx-auto border border-gray-300 text-xl font-bold mt-5 py-2 rounded-2xl">
               {<p className="ml-2 ml-5 mb-4">Who to follow</p>}
 
-              {profiles?.map((profile) => (
+              {recommendedProfiles?.map((profile) => (
                 <ProfileCard
                   user_id={profile.id}
                   key={profile.id}
@@ -303,7 +306,7 @@ function MainLayout({}: Props) {
                   t_identifier={profile.t_identifier}
                 />
               ))}
-              {profiles?.length === 0 && (
+              {recommendedProfiles?.length === 0 && (
                 <p className="text-gray-400 text-center text-md">
                   Looks like there's no one to follow...
                 </p>

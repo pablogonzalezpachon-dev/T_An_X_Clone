@@ -1,34 +1,22 @@
-import React, { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useParams } from "react-router";
 import type { Post } from "../../Lib/types";
 import axios from "axios";
 import PostCard from "../../Lib/Assets/PostCard";
 import LoadingSpinner from "../../Lib/Assets/LoadingSpinner";
 import FallBack from "../../Lib/Assets/FallBack";
+import useStore from "../../Lib/zustandStore";
+import { handleDelete } from "../../Lib/stateFunctions";
 
 type Props = {};
 
 function ProfilePostsPage({}: Props) {
   let { userId } = useParams();
-  const [profilePosts, setProfilePosts] = useState<Post[]>();
   const [loading, setLoading] = useState(false);
   const [fallBack, setFallBack] = useState<ReactNode>();
 
-  const handleDelete = async (postId: number) => {
-    const originalPosts = profilePosts;
-    try {
-      setProfilePosts((prevPosts) =>
-        prevPosts?.filter((post) => post.id !== postId)
-      );
-      const response = await axios.delete(
-        `http://localhost:3000/user/post/${postId}`
-      );
-      console.log(response);
-    } catch (error) {
-      setProfilePosts(originalPosts);
-      console.error("Error deleting post:", error);
-    }
-  };
+  const profilePosts = useStore((state) => state.posts);
+  const setProfilePostsStore = useStore((state) => state.setPosts);
 
   useEffect(() => {
     setLoading(true);
@@ -38,7 +26,7 @@ function ProfilePostsPage({}: Props) {
           `http://localhost:3000/user/profile/${userId}/posts`
         );
         console.log(profilePosts);
-        setProfilePosts(profilePosts);
+        setProfilePostsStore(profilePosts);
         setLoading(false);
         if (!profilePosts.length) {
           setFallBack(
@@ -70,7 +58,7 @@ function ProfilePostsPage({}: Props) {
             likes={post.likes}
             active_user_liked={post.active_user_liked}
             active_user_creator={post.active_user_creator}
-            onDelete={handleDelete}
+            onDelete={() => handleDelete(post.id)}
             user_id={post.user_id}
             replies={post.replies}
             followed={post.followed}

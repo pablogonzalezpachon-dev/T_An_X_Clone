@@ -7,8 +7,8 @@ import axios from "axios";
 import PostCard from "../../Lib/Assets/PostCard";
 import debounce from "debounce";
 import { useNavigate, useSearchParams } from "react-router";
-import { ca } from "zod/v4/locales";
-import { set } from "zod";
+import useStore from "../../Lib/zustandStore";
+import { uniqueById } from "../../Lib/functions";
 
 type Props = {};
 
@@ -23,7 +23,11 @@ function ExplorePage({}: Props) {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const [searchedProfiles, setSearchedProfiles] = useState<UserProfile[]>();
+  const recommendedProfiles = useStore((state) => state.recommendedProfiles);
 
+  const stateUsers = useStore((state) => state.users);
+  const setUsers = useStore((state) => state.setUsers);
+  console.log(stateUsers, "heeeeloooo");
   useEffect(() => {
     async function fetchDefaultPosts() {
       try {
@@ -52,14 +56,32 @@ function ExplorePage({}: Props) {
         console.log(e);
       }
     };
+
+    async function fetchDefaultUsers() {
+      try {
+        const { data: users } = await axios.get<UserProfile[]>(
+          "http://localhost:3000/user/posts/users"
+        );
+        console.log(uniqueById(users));
+        setUsers(uniqueById([...users, ...(recommendedProfiles || [])]));
+      } catch (e) {
+        console.error("Error fetching users:", e);
+      }
+    }
+
     const fetchData = async () => {
       if (!queryParams[0].get("query")) {
-        await Promise.all([fetchDefaultProfiles(), fetchDefaultPosts()]);
+        await Promise.all([
+          fetchDefaultProfiles(),
+          fetchDefaultPosts(),
+          fetchDefaultUsers(),
+        ]);
         return;
       } else {
         await Promise.all([
           fetchProfiles(queryParams[0].get("query") || ""),
           fetchPosts(queryParams[0].get("query") || ""),
+          fetchUsersFromProfiles(queryParams[0].get("query") || ""),
         ]);
       }
     };
@@ -98,6 +120,22 @@ function ExplorePage({}: Props) {
       setPosts(posts);
     } catch (error) {
       console.error("Error fetching posts:", error);
+    }
+  }
+
+  async function fetchUsersFromProfiles(query: string) {
+    try {
+      const { data: users } = await axios.get<UserProfile[]>(
+        `http://localhost:3000/user/search/profiles/users?q=${query}`
+      );
+      console.log(users, "hhhhhhhwd9999");
+      console.log(
+        uniqueById([...users, ...(recommendedProfiles || [])]),
+        "Users from"
+      );
+      setUsers(uniqueById([...users, ...(recommendedProfiles || [])]));
+    } catch (error) {
+      console.error("Error fetching users from profiles:", error);
     }
   }
 

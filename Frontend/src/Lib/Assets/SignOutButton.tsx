@@ -9,13 +9,11 @@ import {
   MenuItems,
   Transition,
 } from "@headlessui/react";
-import React, { useContext, useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { BsThreeDots } from "react-icons/bs";
-import { FiTrash2 } from "react-icons/fi";
-import { RiUserFollowLine } from "react-icons/ri";
-import { AuthContext } from "../Contexts/AuthContext";
 import axios from "axios";
 import { useNavigate } from "react-router";
+import useStore from "../zustandStore";
 
 type Props = {
   name: string;
@@ -26,8 +24,11 @@ type Props = {
 function SignOutButton({ name, t_identifier, avatar }: Props) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const navigate = useNavigate();
+  const setActiveUserProfile = useStore((state) => state.setActiveUser);
+
   async function handleLogOut() {
     try {
+      setActiveUserProfile(null);
       const response = await axios.post(
         "http://localhost:3000/auth/logout",
         {},

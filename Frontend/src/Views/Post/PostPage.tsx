@@ -12,10 +12,11 @@ import LoadingSpinner from "../../Lib/Assets/LoadingSpinner";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import PostCard from "../../Lib/Assets/PostCard";
 import ProgressBar from "../../Lib/Assets/ProgressBar";
-import { AuthContext } from "../../Lib/Contexts/AuthContext";
 import FileGrid from "../../Lib/Assets/FileGrid";
 import TemporaryFileGrid from "../../Lib/Assets/TemporaryFileGrid";
 import { MdOutlinePermMedia } from "react-icons/md";
+import useStore from "../../Lib/zustandStore";
+import { handleDelete } from "../../Lib/stateFunctions";
 
 type Props = {};
 
@@ -31,20 +32,24 @@ type Inputs = {
 };
 
 function PostPage({}: Props) {
+  const activeUserProfile = useStore((state) => state.activeUser);
+  const setUsers = useStore((state) => state.setUsers);
+  const recommendedProfiles = useStore((state) => state.recommendedProfiles);
+
   const navigate = useNavigate();
   const { postId } = useParams();
-  const postIdNum = postId && parseInt(postId);
   const [contentState, setContentState] = useState(false);
   const [postData, setPostData] = useState<Post>();
   const [liked, setLiked] = useState<boolean>();
   const [numLikes, setnumLikes] = useState<number>(0);
-  const [replies, setReplies] = useState<Post[]>([]);
+
+  const replies = useStore((state) => state.posts);
+  const setReplies = useStore((state) => state.setPosts);
 
   const [postLoading, setPostLoading] = useState<boolean>(false);
   const [repliesLoading, setRepliesLoading] = useState<boolean>(false);
   const { register, handleSubmit, reset } = useForm<Inputs>({});
   const [newReplyLoading, setNewReplyLoading] = useState(false);
-  const { activeUserAvatar } = useContext(AuthContext);
   const [media, setMedia] = useState<(string | null)[]>([]);
   const [files, setFiles] = useState<File[]>([]);
   const [filesError, setFilesError] = useState<string | null>(null);
@@ -69,7 +74,6 @@ function PostPage({}: Props) {
       console.error("Error liking post:", error);
     }
   }
-
   async function handleUnlike() {
     const originalNumLikes = numLikes;
     setLiked(false);
@@ -88,6 +92,7 @@ function PostPage({}: Props) {
       console.error("Error unliking post:", error);
     }
   }
+
   function handlePhoto(file?: File) {
     if (!file) return;
 
@@ -145,7 +150,7 @@ function PostPage({}: Props) {
             reply_to: parseInt(postId),
             replies: 0,
             followed: false,
-            avatar: activeUserAvatar,
+            avatar: activeUserProfile?.avatar || null,
             file_1: toPublicUrl(storedPaths[0], "post_media"),
             file_2: toPublicUrl(storedPaths[1], "post_media"),
             file_3: toPublicUrl(storedPaths[2], "post_media"),
@@ -196,24 +201,24 @@ function PostPage({}: Props) {
       setRepliesLoading(false);
       setPostLoading(false);
     };
-    fetchPost();
-  }, [postId]);
 
-  const handleDelete = async (postId: number) => {
-    const originalReplies = replies;
-    try {
-      setReplies((prevReplies) =>
-        prevReplies.filter((reply) => reply.id !== postId)
-      );
-      const response = await axios.delete(
-        `http://localhost:3000/user/post/${postId}`
-      );
-      console.log(response);
-    } catch (error) {
-      setReplies(originalReplies);
-      console.error("Error deleting post:", error);
-    }
-  };
+    const fetchUsers = async () => {
+      try {
+        const { data: users } = await axios.get<UserProfile[]>(
+          `http://localhost:3000/user/post/replies/${postId}/users`
+        );
+        console.log(users);
+        setUsers([...users, ...(recommendedProfiles || [])]);
+      } catch (e) {
+        console.log(e);
+      }
+    };
+
+    const fetchData = async () => {
+      await Promise.all([fetchPost(), fetchUsers()]);
+    };
+    fetchData();
+  }, [postId]);
 
   return (
     <div className="grid grid-cols-1">
@@ -274,11 +279,15 @@ function PostPage({}: Props) {
           </div>
 
           <div className="flex mx-auto">
-            <FileGrid
-              files={media.filter(
-                (file) => file !== null && file !== undefined
-              )}
-            />
+            {postLoading ? (
+              ""
+            ) : (
+              <FileGrid
+                files={media.filter(
+                  (file) => file !== null && file !== undefined
+                )}
+              />
+            )}
           </div>
 
           {postLoading && (
@@ -330,9 +339,9 @@ function PostPage({}: Props) {
           className="w-full border-b border-x border-gray-200 p-4"
         >
           <div className="flex gap-x-2 ">
-            {activeUserAvatar ? (
+            {activeUserProfile?.avatar ? (
               <img
-                src={activeUserAvatar}
+                src={activeUserProfile.avatar}
                 className="w-11 h-11 rounded-full border object-cover"
               />
             ) : (
@@ -405,7 +414,7 @@ function PostPage({}: Props) {
             likes={reply.likes}
             active_user_liked={reply.active_user_liked}
             active_user_creator={reply.active_user_creator}
-            onDelete={handleDelete}
+            onDelete={() => handleDelete(reply.id)}
             user_id={reply.user_id}
             replies={reply.replies}
             followed={reply.followed}

@@ -1,34 +1,22 @@
-import React, { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useParams } from "react-router";
 import type { Post } from "../../Lib/types";
 import axios from "axios";
 import PostCard from "../../Lib/Assets/PostCard";
 import LoadingSpinner from "../../Lib/Assets/LoadingSpinner";
 import FallBack from "../../Lib/Assets/FallBack";
+import useStore from "../../Lib/zustandStore";
+import { handleDelete } from "../../Lib/stateFunctions";
 
 type Props = {};
 
 function RepliesPage({}: Props) {
   let { userId } = useParams();
-  const [profileReplies, setProfileReplies] = useState<Post[]>();
   const [loading, setLoading] = useState(false);
   const [fallBack, setFallBack] = useState<ReactNode>();
 
-  const handleDelete = async (postId: number) => {
-    const originalReplies = profileReplies;
-    try {
-      setProfileReplies((prevReplies) =>
-        prevReplies?.filter((reply) => reply.id !== postId)
-      );
-      const response = await axios.delete(
-        `http://localhost:3000/user/post/${postId}`
-      );
-      console.log(response);
-    } catch (error) {
-      setProfileReplies(originalReplies);
-      console.error("Error deleting post:", error);
-    }
-  };
+  const profileReplies = useStore((state) => state.posts);
+  const setProfileReplies = useStore((state) => state.setPosts);
 
   useEffect(() => {
     setLoading(true);
@@ -68,7 +56,7 @@ function RepliesPage({}: Props) {
             likes={reply.likes}
             active_user_liked={reply.active_user_liked}
             active_user_creator={reply.active_user_creator}
-            onDelete={handleDelete}
+            onDelete={() => handleDelete(reply.id)}
             user_id={reply.user_id}
             replies={reply.replies}
             followed={reply.followed}

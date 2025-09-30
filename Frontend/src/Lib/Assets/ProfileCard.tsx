@@ -1,5 +1,7 @@
 import { BsPersonFill } from "react-icons/bs";
 import { useNavigate } from "react-router";
+import useStore from "../zustandStore";
+import { handleFollow, handleUnfollow } from "../stateFunctions";
 
 type Props = {
   name: string;
@@ -12,6 +14,11 @@ function ProfileCard({ name, avatar, t_identifier, user_id }: Props) {
   const navigateToProfile = () => {
     navigate(`/${user_id}`);
   };
+  console.log(user_id, "from profile card");
+
+  const users = useStore((state) => state.users);
+  const user = users.find((user) => user.id === user_id);
+
   return (
     <div
       className="flex items-center place-content-between px-4 py-2 hover:bg-gray-100 cursor-pointer"
@@ -36,8 +43,18 @@ function ProfileCard({ name, avatar, t_identifier, user_id }: Props) {
         </div>
       </div>
 
-      <button className="bg-black text-white text-sm rounded-4xl py-1 px-4">
-        Follow
+      <button
+        className={`text-sm rounded-4xl py-1 px-4 ${
+          user?.followed
+            ? "bg-white text-black border border-gray-300"
+            : "bg-black text-white"
+        }`}
+        onClick={(e) => {
+          e.stopPropagation();
+          user?.followed ? handleUnfollow(user_id) : handleFollow(user_id);
+        }}
+      >
+        {user?.followed ? "Following" : "Follow"}
       </button>
     </div>
   );

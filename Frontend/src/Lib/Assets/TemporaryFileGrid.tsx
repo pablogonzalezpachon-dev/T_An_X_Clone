@@ -1,4 +1,3 @@
-import React from "react";
 import { IoCloseCircle } from "react-icons/io5";
 
 type Props = {
@@ -8,7 +7,7 @@ type Props = {
   setError: (error: string | null) => void;
 };
 
-function TemporaryFileGrid({ files, setFiles, error, setError }: Props) {
+function TemporaryFileGrid({ files, setFiles, error }: Props) {
   return (
     <div
       className={`pl-16 grid gap-2 ${

@@ -49,6 +49,7 @@ export default function LoginFlow({}: Props) {
         data
       );
       navigate("/home");
+
       console.log(response);
       setLoading(false);
     } catch (e) {

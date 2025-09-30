@@ -1,3 +1,5 @@
+import type { UserProfile } from "./types";
+
 const BASE = import.meta.env.VITE_SUPABASE_URL;
 
 export function isValidDate(year: number, month: number, day: number): boolean {
@@ -165,3 +167,6 @@ export const toPublicUrl = (path: string, bucket: string) => {
   if (!path) return null;
   return `${BASE}/storage/v1/object/public/${bucket}/${path}`;
 };
+
+export const uniqueById = (arr: UserProfile[]) =>
+  Array.from(new Map(arr.map((o) => [o.id, o])).values());
