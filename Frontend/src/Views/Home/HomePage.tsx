@@ -11,7 +11,10 @@ import { BsPersonFill } from "react-icons/bs";
 import { MdOutlinePermMedia } from "react-icons/md";
 import TemporaryFileGrid from "../../Lib/Assets/TemporaryFileGrid";
 import useStore from "../../Lib/zustandStore";
-import { handleDelete } from "../../Lib/stateFunctions";
+import {
+  fetchRecommendedProfiles,
+  handleDelete,
+} from "../../Lib/stateFunctions";
 
 function getPublicUrls(paths: string[]) {
   return paths.map((path) => {
@@ -43,6 +46,9 @@ function HomePage({}: Props) {
   const [files, setFiles] = useState<File[]>([]);
 
   const recommendedProfiles = useStore((state) => state.recommendedProfiles);
+  const setRecommendedProfiles = useStore(
+    (state) => state.setRecommendedProfiles
+  );
 
   const textarea = document.getElementById(
     "post-textarea"
@@ -136,7 +142,13 @@ function HomePage({}: Props) {
           "http://localhost:3000/user/posts/users"
         );
         console.log(uniqueById(users));
-        setUsers(uniqueById([...users, ...(recommendedProfiles || [])]));
+
+        const { data: profiles } = await axios.get<UserProfile[]>(
+          "http://localhost:3000/user/profiles"
+        );
+
+        console.log(recommendedProfiles, "recommendedProfiles");
+        setUsers(uniqueById([...users, ...(profiles || [])]));
       } catch (e) {
         console.error("Error fetching users:", e);
       }

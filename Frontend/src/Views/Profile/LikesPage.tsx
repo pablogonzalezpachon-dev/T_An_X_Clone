@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { Post } from "../../Lib/types";
+import type { Post, UserProfile } from "../../Lib/types";
 import axios from "axios";
 import PostCard from "../../Lib/Assets/PostCard";
 import LoadingSpinner from "../../Lib/Assets/LoadingSpinner";
@@ -13,23 +13,49 @@ function LikesPage({}: Props) {
   const likedPosts = useStore((state) => state.posts);
   const setLikedPosts = useStore((state) => state.setPosts);
 
+  const setUsers = useStore((state) => state.setUsers);
+  const recommendedProfiles = useStore((state) => state.recommendedProfiles);
+  const users = useStore((state) => state.users);
+
   useEffect(() => {
     setLoading(true);
-    async function fetchData() {
+    async function fetchLikedPosts() {
       try {
+        const { data: users } = await axios.get<UserProfile[]>(
+          "http://localhost:3000/user/profile/posts/likes/users"
+        );
         const { data: likedPosts } = await axios.get<Post[]>(
           `http://localhost:3000/user/profile/posts/likes`
         );
+        setUsers([...users, ...(recommendedProfiles || [])]);
         setLoading(false);
         setLikedPosts(likedPosts);
         console.log(likedPosts);
+        setLoading(false);
       } catch (e) {
         setLoading(false);
         console.log(e);
       }
     }
+
+    async function fetchUsers() {
+      try {
+        const { data: users } = await axios.get<UserProfile[]>(
+          "http://localhost:3000/user/profile/posts/likes/users"
+        );
+        setUsers([...users, ...(recommendedProfiles || [])]);
+      } catch (e) {
+        console.log(e);
+      }
+    }
+
+    async function fetchData() {
+      await Promise.all([fetchLikedPosts(), fetchUsers()]);
+    }
+
     fetchData();
   }, []);
+  console.log(users, "hellooooo");
 
   return (
     <>

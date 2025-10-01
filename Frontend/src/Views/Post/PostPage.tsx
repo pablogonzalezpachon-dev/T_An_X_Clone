@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BiRepost } from "react-icons/bi";
 import { BsPersonFill, BsThreeDots } from "react-icons/bs";
 import { FaEye, FaRegBookmark, FaRegHeart } from "react-icons/fa";

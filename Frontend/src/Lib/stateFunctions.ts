@@ -1,5 +1,6 @@
 import axios from "axios";
 import useStore from "./zustandStore";
+import type { UserProfile } from "./types";
 
 export const handleDelete = async (postId: number) => {
   const { posts } = useStore.getState();
@@ -24,10 +25,17 @@ export const handleDelete = async (postId: number) => {
 export async function handleFollow(id: string) {
   const { users } = useStore.getState();
   const { activeUser } = useStore.getState();
+  const recommendedProfiles = useStore.getState().recommendedProfiles;
 
   try {
     useStore.setState({
       users: users.map((user) => {
+        if (user.id === id) {
+          return { ...user, followed: true, followers: user.followers + 1 };
+        }
+        return user;
+      }),
+      recommendedProfiles: recommendedProfiles?.map((user) => {
         if (user.id === id) {
           return { ...user, followed: true, followers: user.followers + 1 };
         }
@@ -51,6 +59,13 @@ export async function handleFollow(id: string) {
   } catch (e) {
     useStore.setState({
       users: users.map((user) => {
+        if (user.id === id) {
+          return { ...user, followed: false, followers: user.followers - 1 };
+        }
+        return user;
+      }),
+
+      recommendedProfiles: recommendedProfiles?.map((user) => {
         if (user.id === id) {
           return { ...user, followed: false, followers: user.followers - 1 };
         }
@@ -81,6 +96,15 @@ export async function handleUnfollow(id: string) {
         }
         return user;
       }),
+
+      recommendedProfiles: useStore
+        .getState()
+        .recommendedProfiles?.map((user) => {
+          if (user.id === id) {
+            return { ...user, followed: false, followers: user.followers - 1 };
+          }
+          return user;
+        }),
     });
 
     activeUser &&
@@ -103,6 +127,15 @@ export async function handleUnfollow(id: string) {
         }
         return user;
       }),
+
+      recommendedProfiles: useStore
+        .getState()
+        .recommendedProfiles?.map((user) => {
+          if (user.id === id) {
+            return { ...user, followed: true, followers: user.followers + 1 };
+          }
+          return user;
+        }),
     });
 
     activeUser &&
@@ -116,3 +149,18 @@ export async function handleUnfollow(id: string) {
     console.log(e);
   }
 }
+
+export const fetchRecommendedProfiles = async () => {
+  const users = useStore.getState().users;
+  try {
+    const { data: profiles } = await axios.get<UserProfile[]>(
+      "http://localhost:3000/user/profiles"
+    );
+    useStore.setState({
+      recommendedProfiles: profiles,
+      users: [...users, ...profiles],
+    });
+  } catch (e) {
+    console.log(e);
+  }
+};

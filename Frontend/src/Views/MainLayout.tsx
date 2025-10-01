@@ -14,6 +14,7 @@ import SignOutButton from "../Lib/Assets/SignOutButton";
 import ProfileCard from "../Lib/Assets/ProfileCard";
 import debounce from "debounce";
 import useStore from "../Lib/zustandStore";
+import { fetchRecommendedProfiles } from "../Lib/stateFunctions";
 
 type Props = {};
 
@@ -25,6 +26,9 @@ function MainLayout({}: Props) {
   const setRecommendedProfiles = useStore(
     (state) => state.setRecommendedProfiles
   );
+
+  const users = useStore((state) => state.users);
+  const setUsers = useStore((state) => state.setUsers);
 
   console.log(location);
 
@@ -57,18 +61,8 @@ function MainLayout({}: Props) {
     };
     verifyAuth();
 
-    const fetchProfiles = async () => {
-      try {
-        const { data: profiles } = await axios.get<UserProfile[]>(
-          "http://localhost:3000/user/profiles"
-        );
-        setRecommendedProfiles(profiles);
-      } catch (e) {
-        console.log(e);
-      }
-    };
     const fetchData = async () => {
-      await Promise.all([fetchProfiles(), verifyAuth()]);
+      await Promise.all([fetchRecommendedProfiles(), verifyAuth()]);
     };
     fetchData();
 

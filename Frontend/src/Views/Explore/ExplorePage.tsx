@@ -9,6 +9,7 @@ import debounce from "debounce";
 import { useNavigate, useSearchParams } from "react-router";
 import useStore from "../../Lib/zustandStore";
 import { uniqueById } from "../../Lib/functions";
+import { handleDelete } from "../../Lib/stateFunctions";
 
 type Props = {};
 
@@ -17,7 +18,10 @@ function ExplorePage({}: Props) {
   console.log(queryParams[0].get("query"));
   const navigate = useNavigate();
   const [profiles, setProfiles] = useState<UserProfile[]>();
-  const [posts, setPosts] = useState<Post[]>([]);
+
+  const posts = useStore((state) => state.posts);
+  const setPosts = useStore((state) => state.setPosts);
+
   const [dialogOpen, setDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState<string>();
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -25,10 +29,11 @@ function ExplorePage({}: Props) {
   const [searchedProfiles, setSearchedProfiles] = useState<UserProfile[]>();
   const recommendedProfiles = useStore((state) => state.recommendedProfiles);
 
-  const stateUsers = useStore((state) => state.users);
+  const lastUsers = useStore((state) => state.users);
   const setUsers = useStore((state) => state.setUsers);
-  console.log(stateUsers, "heeeeloooo");
+
   useEffect(() => {
+    setPosts([]);
     async function fetchDefaultPosts() {
       try {
         const { data: posts } = await axios.get<Post[]>(
@@ -69,6 +74,48 @@ function ExplorePage({}: Props) {
       }
     }
 
+    async function fetchProfiles(query: string) {
+      try {
+        const { data: profiles } = await axios.get<UserProfile[]>(
+          `http://localhost:3000/user/search/profiles?q=${query}`
+        );
+        setProfiles(profiles);
+        setUsers(
+          uniqueById([
+            ...lastUsers,
+            ...profiles,
+            ...(recommendedProfiles || []),
+          ])
+        );
+      } catch (e) {
+        console.log(e);
+      }
+    }
+
+    async function fetchPosts(query: string) {
+      try {
+        const { data: posts } = await axios.get<Post[]>(
+          `http://localhost:3000/user/search/posts?q=${query}`
+        );
+        setPosts(posts);
+      } catch (error) {
+        console.error("Error fetching posts:", error);
+      }
+    }
+
+    async function fetchUsers(query: string) {
+      try {
+        const { data: users } = await axios.get<UserProfile[]>(
+          `http://localhost:3000/user/search/posts/users?q=${query}`
+        );
+        setUsers(
+          uniqueById([...lastUsers, ...users, ...(recommendedProfiles || [])])
+        );
+      } catch (e) {
+        console.error("Error fetching users:", e);
+      }
+    }
+
     const fetchData = async () => {
       if (!queryParams[0].get("query")) {
         await Promise.all([
@@ -78,10 +125,11 @@ function ExplorePage({}: Props) {
         ]);
         return;
       } else {
+        setUsers([]);
         await Promise.all([
           fetchProfiles(queryParams[0].get("query") || ""),
           fetchPosts(queryParams[0].get("query") || ""),
-          fetchUsersFromProfiles(queryParams[0].get("query") || ""),
+          fetchUsers(queryParams[0].get("query") || ""),
         ]);
       }
     };
@@ -100,44 +148,6 @@ function ExplorePage({}: Props) {
       searchInputRef.current.value = queryParams[0].get("query") || "";
     }
   }, [queryParams[0].get("query")]);
-
-  async function fetchProfiles(query: string) {
-    try {
-      const { data: profiles } = await axios.get<UserProfile[]>(
-        `http://localhost:3000/user/search/profiles?q=${query}`
-      );
-      setProfiles(profiles);
-    } catch (e) {
-      console.log(e);
-    }
-  }
-
-  async function fetchPosts(query: string) {
-    try {
-      const { data: posts } = await axios.get<Post[]>(
-        `http://localhost:3000/user/search/posts?q=${query}`
-      );
-      setPosts(posts);
-    } catch (error) {
-      console.error("Error fetching posts:", error);
-    }
-  }
-
-  async function fetchUsersFromProfiles(query: string) {
-    try {
-      const { data: users } = await axios.get<UserProfile[]>(
-        `http://localhost:3000/user/search/profiles/users?q=${query}`
-      );
-      console.log(users, "hhhhhhhwd9999");
-      console.log(
-        uniqueById([...users, ...(recommendedProfiles || [])]),
-        "Users from"
-      );
-      setUsers(uniqueById([...users, ...(recommendedProfiles || [])]));
-    } catch (error) {
-      console.error("Error fetching users from profiles:", error);
-    }
-  }
 
   const search = debounce(async (query: string) => {
     try {
@@ -253,7 +263,9 @@ function ExplorePage({}: Props) {
       </div>
 
       <div className="w-full border-b border-x border-gray-200 text-xl font-bold">
-        <p className="ml-2 ml-5 mb-4 text-xl font-bold pt-2">People</p>
+        {profiles?.length! > 0 && (
+          <p className="ml-2 ml-5 mb-4 text-xl font-bold pt-2">People</p>
+        )}
         {profiles?.map((profile) => (
           <ProfileCard
             user_id={profile.id}
@@ -275,7 +287,7 @@ function ExplorePage({}: Props) {
           likes={post.likes}
           active_user_liked={post.active_user_liked}
           active_user_creator={post.active_user_creator}
-          onDelete={(postId: number) => Promise.resolve()}
+          onDelete={() => handleDelete(post.id)}
           user_id={post.user_id}
           replies={post.replies}
           followed={post.followed}
@@ -291,6 +303,3 @@ function ExplorePage({}: Props) {
 }
 
 export default ExplorePage;
-function getPublicUrls(avatars: string[]) {
-  throw new Error("Function not implemented.");
-}
