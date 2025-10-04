@@ -169,7 +169,6 @@ function PostCard({
 
         <div className="flex items-center gap-x-1 ">
           <BiRepost color="gray" size={25} className="" />
-          <p className="text-gray-500">0</p>
         </div>
 
         <div className="flex items-center gap-x-2 ">
@@ -187,7 +186,6 @@ function PostCard({
 
         <div className="flex items-center gap-x-1 ">
           <FaEye color="gray" size={20} className="" />
-          <p className="text-gray-500">0</p>
         </div>
 
         <div className="flex items-center gap-x-1 ">

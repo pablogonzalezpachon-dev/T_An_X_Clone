@@ -147,8 +147,13 @@ function HomePage({}: Props) {
           "http://localhost:3000/user/profiles"
         );
 
-        console.log(recommendedProfiles, "recommendedProfiles");
-        setUsers(uniqueById([...users, ...(profiles || [])]));
+        setUsers(
+          uniqueById([
+            ...users,
+            ...(profiles || []),
+            ...(recommendedProfiles || []),
+          ])
+        );
       } catch (e) {
         console.error("Error fetching users:", e);
       }
@@ -160,6 +165,9 @@ function HomePage({}: Props) {
 
     fetchData();
   }, []);
+  const users = useStore((state) => state.users);
+
+  console.log(users);
 
   function handlePhoto(file?: File) {
     if (!file) return;

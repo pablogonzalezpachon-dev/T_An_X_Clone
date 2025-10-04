@@ -160,6 +160,9 @@ function ExplorePage({}: Props) {
       console.log(e);
     }
   }, 300);
+  const users = useStore((state) => state.users);
+
+  console.log(users);
 
   return (
     <div className="h-screen">

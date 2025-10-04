@@ -296,8 +296,7 @@ function PostPage({}: Props) {
 
           <div className="mt-5">
             <p className="text-gray-500">
-              {postData && formatTimeDotDate(postData?.date_of_creation)} · 0
-              Views
+              {postData && formatTimeDotDate(postData?.date_of_creation)}
             </p>
           </div>
           <div className="h-5 w-full mt-5 flex justify-evenly border-y py-5 border-gray-200">
